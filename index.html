@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Base de Dados - Gestão e Visualização Personalizada</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .container-app, .container-admin { 
+            max-width: 1200px; margin: 2rem auto; padding: 1rem;
+        }
+        .container-admin-login-form { 
+            max-width: 400px; 
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding: 1rem; 
+        }
+        @media (prefers-color-scheme: dark) {
+            select, input[type="text"], input[type="password"], input[type="file"]::file-selector-button, input[type="checkbox"] {
+                background-color: #374151; color: #f3f4f6; border-color: #4b5563;
+            }
+            input[type="checkbox"] { accent-color: #3b82f6; }
+            select option { background-color: #374151; color: #f3f4f6; }
+            input[type="file"]::file-selector-button {
+                padding: 0.5rem 1rem; border-radius: 0.375rem; transition: background-color 0.2s;
+            }
+            input[type="file"]::file-selector-button:hover { background-color: #4b5563; }
+        }
+        input[type="file"] { border: 1px solid; border-radius: 0.375rem; padding: 0.25rem; }
+        input[type="text"], input[type="password"] {
+             border: 1px solid #D1D5DB; padding: 0.5rem; border-radius: 0.375rem;
+             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); width: 100%;
+        }
+        input[type="text"]:focus, input[type="password"]:focus {
+            outline: 2px solid transparent; outline-offset: 2px; border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        }
+        .table-container { overflow-x: auto; }
+        .hidden { display: none !important; }
+        .file-input-wrapper { display: inline-block; position: relative; overflow: hidden; }
+        .file-input-wrapper input[type="file"] {
+            position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;
+        }
+        .file-input-button {
+            background-color: #3b82f6; color: white; padding: 0.5rem 0.75rem; border-radius: 0.375rem; 
+            font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background-color 0.15s ease-in-out;
+        }
+        .file-input-button:hover { background-color: #2563eb; }
+        .feedback-success { color: #16a34a; }
+        .feedback-error { color: #dc2626; }
+        .feedback-warning { color: #f59e0b; }
+        @media (prefers-color-scheme: dark) {
+            .feedback-success { color: #4ade80; }
+            .feedback-error { color: #f87171; }
+            .feedback-warning { color: #facc15; }
+        }
+        .colunas-visiveis-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.5rem;
+            max-height: 150px; /* Altura máxima com scroll */
+            overflow-y: auto; /* Scroll vertical */
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb; /* border-gray-200 */
+            border-radius: 0.375rem; /* rounded-md */
+        }
+        .colunas-visiveis-container label {
+            display: flex;
+            align-items: center;
+            font-size: 0.875rem; /* text-sm */
+            cursor: pointer;
+        }
+         .colunas-visiveis-container input[type="checkbox"] {
+            margin-right: 0.5rem; /* mr-2 */
+            height: 1rem; /* h-4 */
+            width: 1rem; /* w-4 */
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+
+    <div id="telaLogin" class="container-admin-login-form">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full"> 
+            <h1 class="text-2xl font-bold text-center text-blue-600 dark:text-blue-400 mb-6">Acesso ao Sistema</h1>
+            <form id="formLogin">
+                <div class="mb-4">
+                    <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Usuário:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Senha:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">
+                    Entrar
+                </button>
+                <p id="mensagemLogin" class="mt-4 text-sm text-center font-semibold"></p> 
+            </form>
+        </div>
+    </div>
+
+    <div id="telaAdmin" class="container-admin hidden">
+        <header class="mb-8">
+            <div class="flex justify-between items-center mb-2">
+                <h1 class="text-3xl md:text-4xl font-bold text-green-600 dark:text-green-400">Painel do Administrador</h1>
+                <button id="botaoLogoutAdmin" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-3 rounded-md shadow-md text-sm transition duration-150 ease-in-out">
+                    Sair
+                </button>
+            </div>
+            <p class="text-md text-gray-600 dark:text-gray-400">Gerenciar usuários e designar CSVs por upload.</p>
+            <p id="adminGlobalMessage" class="mt-2 text-sm font-semibold"></p>
+        </header>
+
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200 border-b pb-2 border-gray-300 dark:border-gray-600">Adicionar Novo Usuário</h2>
+            <form id="formAdicionarUsuario">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="newUsername" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome do Usuário:</label>
+                        <input type="text" id="newUsername" class="p-2 border border-gray-300 dark:border-gray-600 rounded-md w-full text-sm" required>
+                    </div>
+                    <div>
+                        <label for="newPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Senha:</label>
+                        <input type="password" id="newPassword" class="p-2 border border-gray-300 dark:border-gray-600 rounded-md w-full text-sm" required>
+                    </div>
+                </div>
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md text-sm transition duration-150 ease-in-out">
+                    Adicionar Usuário
+                </button>
+                <p id="adminAddUserMessage" class="mt-3 text-sm font-semibold"></p>
+            </form>
+        </div>
+
+        <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200 border-b pb-2 border-gray-300 dark:border-gray-600 mt-8">Gerenciar Usuários Existentes</h2>
+        <div id="listaUsuariosAdmin" class="space-y-6">
+        </div>
+    </div>
+
+
+    <div id="conteudoPrincipal" class="container-app hidden"> 
+        <header class="mb-8 text-center">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400">Visualizador de Base de Dados</h1>
+                <button id="botaoLogoutUser" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-3 rounded-md shadow-md text-sm transition duration-150 ease-in-out">
+                    Sair
+                </button>
+            </div>
+            <p id="mensagemCSVInfo" class="text-md text-gray-600 dark:text-gray-400 mt-2"></p>
+        </header>
+
+        <div id="uploadManualSection" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+            <h2 class="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">Carregar Base de Dados (CSV)</h2>
+            <div class="mb-4">
+                <label for="arquivoCSV" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Selecione um arquivo CSV:</label>
+                <input type="file" id="arquivoCSV" accept=".csv" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm text-gray-700 dark:text-gray-300
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-md file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-blue-50 dark:file:bg-blue-800 file:text-blue-700 dark:file:text-blue-300
+                                hover:file:bg-blue-100 dark:hover:file:bg-blue-700 cursor-pointer">
+            </div>
+            <button id="botaoCarregarCSV" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">
+                Carregar Dados do CSV
+            </button>
+            <p id="mensagemUploadCSV" class="mt-3 text-sm font-semibold"></p> 
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 items-end">
+                <div>
+                    <label for="filtroColunaSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">1. Filtrar por Coluna:</label>
+                    <select id="filtroColunaSelect" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100">
+                        <option value="">Selecione uma coluna</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="filtroPesquisaInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">2. Pesquisar na Coluna:</label>
+                    <input type="text" id="filtroPesquisaInput" class="w-full" placeholder="Digite para pesquisar..." disabled>
+                </div>
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Colunas Visíveis na Tabela:</label>
+                <div id="colunasVisiveisContainer" class="colunas-visiveis-container bg-gray-50 dark:bg-gray-700/50">
+                    </div>
+            </div>
+             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                 <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-md text-center">
+                    <h2 class="text-lg font-semibold text-blue-700 dark:text-blue-300">Total de Registros</h2>
+                    <p id="totalBase" class="text-2xl font-bold text-blue-600 dark:text-blue-400">0</p>
+                </div>
+                <div class="bg-green-50 dark:bg-green-900 p-4 rounded-md text-center">
+                    <h2 class="text-lg font-semibold text-green-700 dark:text-green-300">Registros Exibidos</h2>
+                    <p id="pessoasExibidas" class="text-2xl font-bold text-green-600 dark:text-green-400">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-lg table-container">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead id="tabelaCabecalho" class="bg-gray-50 dark:bg-gray-700"></thead>
+                <tbody id="tabelaCorpo" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+            </table>
+            <div id="mensagemSemDados" class="text-center py-8 text-gray-500 dark:text-gray-400 hidden"></div>
+        </div>
+        <footer class="text-center mt-12 py-4 border-t border-gray-200 dark:border-gray-700">
+            <p class="text-sm text-gray-500 dark:text-gray-400">&copy; <span id="currentYear"></span> Seu Aplicativo de Dados. Todos os direitos reservados.</p>
+        </footer>
+    </div>
+
+    <script>
+        // --- Estado da Aplicação ---
+        let dadosPessoas = [];
+        let csvHeaders = []; 
+        let colunasSelecionadas = []; 
+        let currentUser = null;
+        let mockUsuarios = [
+            { username: "admin", password: "123", role: "admin", assignedCSV: null },
+            { username: "Neto", password: "Izalci@22", role: "user", assignedCSV: null }
+        ];
+
+        // --- Seletores de DOM ---
+        const DOMElements = {
+            telaLogin: document.getElementById('telaLogin'),
+            telaAdmin: document.getElementById('telaAdmin'),
+            conteudoPrincipal: document.getElementById('conteudoPrincipal'),
+            formLogin: document.getElementById('formLogin'),
+            usernameInput: document.getElementById('username'),
+            passwordInput: document.getElementById('password'),
+            mensagemLogin: document.getElementById('mensagemLogin'),
+            botaoLogoutAdmin: document.getElementById('botaoLogoutAdmin'),
+            botaoLogoutUser: document.getElementById('botaoLogoutUser'),
+            listaUsuariosAdmin: document.getElementById('listaUsuariosAdmin'),
+            adminGlobalMessage: document.getElementById('adminGlobalMessage'),
+            formAdicionarUsuario: document.getElementById('formAdicionarUsuario'),
+            newUsernameInput: document.getElementById('newUsername'),
+            newPasswordInput: document.getElementById('newPassword'),
+            adminAddUserMessage: document.getElementById('adminAddUserMessage'),
+            mensagemCSVInfo: document.getElementById('mensagemCSVInfo'),
+            uploadManualSection: document.getElementById('uploadManualSection'),
+            filtroColunaSelect: document.getElementById('filtroColunaSelect'),
+            filtroPesquisaInput: document.getElementById('filtroPesquisaInput'),
+            colunasVisiveisContainer: document.getElementById('colunasVisiveisContainer'), 
+            tabelaCabecalho: document.getElementById('tabelaCabecalho'),
+            tabelaCorpo: document.getElementById('tabelaCorpo'),
+            totalBase: document.getElementById('totalBase'),
+            pessoasExibidas: document.getElementById('pessoasExibidas'),
+            mensagemSemDados: document.getElementById('mensagemSemDados'),
+            arquivoCSVInput: document.getElementById('arquivoCSV'),
+            botaoCarregarCSV: document.getElementById('botaoCarregarCSV'),
+            mensagemUploadCSV: document.getElementById('mensagemUploadCSV'),
+            currentYear: document.getElementById('currentYear')
+        };
+        if (DOMElements.currentYear) DOMElements.currentYear.textContent = new Date().getFullYear();
+
+        // --- Funções Utilitárias ---
+        function exibirMensagemFeedback(elemento, mensagem, tipo = 'info', desaparecerApos = 0) {
+            if (!elemento) return;
+            elemento.classList.remove('feedback-success', 'feedback-error', 'feedback-warning', 'text-gray-600', 'dark:text-gray-400', 'hidden');
+            
+            if (!mensagem || mensagem.trim() === "") {
+                elemento.textContent = '';
+                elemento.classList.add('hidden'); 
+            } else {
+                elemento.textContent = mensagem;
+                elemento.classList.remove('hidden'); 
+                if (tipo === 'success') elemento.classList.add('feedback-success');
+                else if (tipo === 'error') elemento.classList.add('feedback-error');
+                else if (tipo === 'warning') elemento.classList.add('feedback-warning');
+                else elemento.classList.add('text-gray-600', 'dark:text-gray-400'); 
+            }
+
+            if (desaparecerApos > 0 && mensagem && mensagem.trim() !== "") {
+                setTimeout(() => {
+                    elemento.textContent = '';
+                    elemento.classList.add('hidden');
+                    elemento.classList.remove('feedback-success', 'feedback-error', 'feedback-warning', 'text-gray-600', 'dark:text-gray-400');
+                }, desaparecerApos);
+            }
+        }
+
+        function parseCSVContent(textoCSV) {
+            const linhas = textoCSV.split(/\r\n|\n/).filter(linha => linha.trim() !== ''); 
+            if (linhas.length < 1) { throw new Error("CSV vazio ou inválido.");}
+            const headers = linhas[0].split(',').map(h => h.trim().replace(/^"|"$/g, '')); 
+            if (headers.some(h => h === '')) { throw new Error("CSV contém cabeçalhos vazios.");}
+            const data = [];
+            for (let i = 1; i < linhas.length; i++) {
+                const colunas = linhas[i].split(',');
+                const item = {};
+                for (let j = 0; j < headers.length; j++) {
+                    item[headers[j]] = colunas[j] ? colunas[j].trim().replace(/^"|"$/g, '') : ''; 
+                }
+                data.push(item);
+            }
+            return { headers, data };
+        }
+
+        // --- Funções de Login e Gerenciamento de Tela ---
+        function tentarLogin(event) {
+            event.preventDefault(); 
+            const username = DOMElements.usernameInput.value;
+            const password = DOMElements.passwordInput.value;
+            const usuarioEncontrado = mockUsuarios.find(u => u.username === username && u.password === password);
+
+            if (usuarioEncontrado) {
+                currentUser = { ...usuarioEncontrado }; 
+                DOMElements.telaLogin.classList.add('hidden');
+                exibirMensagemFeedback(DOMElements.mensagemLogin, ''); 
+                if (currentUser.role === 'admin') {
+                    DOMElements.telaAdmin.classList.remove('hidden');
+                    DOMElements.conteudoPrincipal.classList.add('hidden');
+                    renderAdminPanel(); 
+                } else { 
+                    DOMElements.telaAdmin.classList.add('hidden');
+                    DOMElements.conteudoPrincipal.classList.remove('hidden');
+                    setupUserView();
+                }
+            } else {
+                exibirMensagemFeedback(DOMElements.mensagemLogin, 'Usuário ou senha inválidos.', 'error');
+                currentUser = null;
+            }
+        }
+
+        function fazerLogout() {
+            currentUser = null;
+            DOMElements.telaLogin.classList.remove('hidden');
+            DOMElements.conteudoPrincipal.classList.add('hidden');
+            DOMElements.telaAdmin.classList.add('hidden');
+            DOMElements.usernameInput.value = ''; 
+            DOMElements.passwordInput.value = '';
+            resetVisualizadorState();
+            exibirMensagemFeedback(DOMElements.adminGlobalMessage, ''); 
+            exibirMensagemFeedback(DOMElements.adminAddUserMessage, ''); 
+        }
+        
+        function resetVisualizadorState() {
+            dadosPessoas = [];
+            csvHeaders = [];
+            colunasSelecionadas = []; 
+            if (DOMElements.colunasVisiveisContainer) DOMElements.colunasVisiveisContainer.innerHTML = ''; 
+            atualizarContagemTotalBase();
+            popularFiltroColuna(); 
+            renderizarTabela([]); 
+            exibirMensagemFeedback(DOMElements.mensagemUploadCSV, '');
+            if(DOMElements.arquivoCSVInput) DOMElements.arquivoCSVInput.value = ''; 
+            if(DOMElements.mensagemCSVInfo) exibirMensagemFeedback(DOMElements.mensagemCSVInfo, '');
+            if(DOMElements.filtroPesquisaInput) DOMElements.filtroPesquisaInput.value = '';
+            DOMElements.uploadManualSection.classList.remove('hidden'); 
+            exibirMensagemFeedback(DOMElements.mensagemSemDados, ''); 
+        }
+
+        function setupUserView() {
+            resetVisualizadorState(); 
+            if (currentUser && currentUser.assignedCSV && currentUser.assignedCSV.data) {
+                exibirMensagemFeedback(DOMElements.mensagemCSVInfo, `Dados carregados automaticamente: "${currentUser.assignedCSV.filename}" (designado pelo admin).`, 'info');
+                csvHeaders = currentUser.assignedCSV.headers;
+                dadosPessoas = currentUser.assignedCSV.data;
+                colunasSelecionadas = [...csvHeaders]; 
+                popularSeletorDeColunas(); 
+                
+                atualizarContagemTotalBase();
+                popularFiltroColuna(); 
+                DOMElements.uploadManualSection.classList.add('hidden'); 
+            } else if (currentUser) {
+                 exibirMensagemFeedback(DOMElements.mensagemCSVInfo, `Nenhum CSV foi designado. Carregue um arquivo manualmente.`, 'warning');
+                 DOMElements.uploadManualSection.classList.remove('hidden'); 
+                 if (DOMElements.colunasVisiveisContainer) DOMElements.colunasVisiveisContainer.innerHTML = '';
+                 colunasSelecionadas = [];
+            }
+             aplicarFiltro(); 
+        }
+
+        // --- Funções do Painel Admin ---
+        function criarUserCardAdmin(user) {
+            const userCard = document.createElement('div');
+            userCard.className = 'bg-gray-200 dark:bg-gray-700 p-4 rounded-lg shadow-md';
+
+            const userGroup = document.createElement('div');
+            userGroup.className = 'mb-3';
+            const userLabel = document.createElement('label');
+            userLabel.className = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
+            userLabel.textContent = `Nome de Usuário (Atual: ${user.username}):`;
+            const inputUsername = document.createElement('input');
+            inputUsername.type = 'text';
+            inputUsername.id = `inputUsername-${user.username}`; 
+            inputUsername.className = `p-2 border border-gray-300 dark:border-gray-600 rounded-md w-full text-sm`;
+            inputUsername.value = user.username;
+            userGroup.appendChild(userLabel);
+            userGroup.appendChild(inputUsername);
+            userCard.appendChild(userGroup);
+
+            const formGrid = document.createElement('div');
+            formGrid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-4 items-start mb-3';
+
+            const passGroup = document.createElement('div');
+            const passLabel = document.createElement('label');
+            passLabel.className = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
+            passLabel.textContent = 'Nova Senha:'; 
+            const inputPassword = document.createElement('input');
+            inputPassword.type = 'text'; 
+            inputPassword.id = `inputPassword-${user.username}`; 
+            inputPassword.className = `p-2 border border-gray-300 dark:border-gray-600 rounded-md w-full text-sm`;
+            inputPassword.value = user.password;
+            passGroup.appendChild(passLabel);
+            passGroup.appendChild(inputPassword);
+            formGrid.appendChild(passGroup);
+
+            const csvGroup = document.createElement('div');
+            const csvLabel = document.createElement('label');
+            csvLabel.className = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
+            csvLabel.textContent = 'Designar CSV:';
+            
+            const currentCSVName = document.createElement('p');
+            currentCSVName.className = 'text-xs text-gray-600 dark:text-gray-400 mb-1';
+            currentCSVName.id = `csv-name-${user.username}`; 
+            currentCSVName.textContent = user.assignedCSV ? `Atual: ${user.assignedCSV.filename}` : 'Nenhum CSV designado.';
+            
+            const inputFileCSV = document.createElement('input');
+            inputFileCSV.type = 'file';
+            inputFileCSV.accept = '.csv';
+            inputFileCSV.className = `w-full text-sm mb-2
+                file:mr-2 file:py-1 file:px-2
+                file:rounded-md file:border-0
+                file:text-xs file:font-semibold
+                file:bg-blue-50 dark:file:bg-blue-800 file:text-blue-700 dark:file:text-blue-300
+                hover:file:bg-blue-100 dark:hover:file:bg-blue-700 cursor-pointer`;
+            inputFileCSV.onchange = (event) => handleAdminCSVUpload(event, user.username);
+
+            csvGroup.appendChild(csvLabel);
+            csvGroup.appendChild(currentCSVName);
+            csvGroup.appendChild(inputFileCSV);
+            formGrid.appendChild(csvGroup);
+            
+            userCard.appendChild(formGrid);
+
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.className = 'flex space-x-3 mt-4';
+
+            const saveButton = document.createElement('button');
+            saveButton.textContent = 'Salvar Alterações'; 
+            saveButton.className = 'bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md text-sm transition duration-150 ease-in-out';
+            saveButton.onclick = () => saveUserChanges(user.username, inputUsername.value, inputPassword.value);
+            buttonsDiv.appendChild(saveButton);
+
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'Remover Usuário';
+            removeButton.className = 'bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md text-sm transition duration-150 ease-in-out';
+            removeButton.onclick = () => handleRemoverUsuario(user.username);
+            buttonsDiv.appendChild(removeButton);
+            
+            userCard.appendChild(buttonsDiv);
+            return userCard;
+        }
+        
+        function renderAdminPanel() {
+            DOMElements.listaUsuariosAdmin.innerHTML = ''; 
+            mockUsuarios.forEach(user => {
+                if (user.role === 'user') { 
+                    const userCard = criarUserCardAdmin(user);
+                    DOMElements.listaUsuariosAdmin.appendChild(userCard);
+                }
+            });
+            exibirMensagemFeedback(DOMElements.adminGlobalMessage, '');
+            exibirMensagemFeedback(DOMElements.adminAddUserMessage, '');
+            if(DOMElements.formAdicionarUsuario) DOMElements.formAdicionarUsuario.reset();
+        }
+        
+        function handleAdminCSVUpload(event, usernameForAssign) {
+            const arquivo = event.target.files[0];
+            exibirMensagemFeedback(DOMElements.adminGlobalMessage, ''); 
+
+            if (!arquivo) return; 
+
+            if (arquivo.type !== 'text/csv' && !arquivo.name.endsWith('.csv')) {
+                 exibirMensagemFeedback(DOMElements.adminGlobalMessage, 'Formato de arquivo inválido. Por favor, selecione um arquivo .csv.', 'error', 4000);
+                 event.target.value = ''; 
+                 return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const { headers, data } = parseCSVContent(e.target.result);
+                    const userToUpdate = mockUsuarios.find(u => u.username === usernameForAssign);
+                    if (userToUpdate) {
+                        userToUpdate.assignedCSV = { filename: arquivo.name, headers, data };
+                        exibirMensagemFeedback(DOMElements.adminGlobalMessage, `CSV '${arquivo.name}' designado para '${usernameForAssign}' com sucesso!`, 'success', 4000);
+                        const csvNameEl = document.getElementById(`csv-name-${usernameForAssign}`);
+                        if(csvNameEl) csvNameEl.textContent = `Atual: ${arquivo.name}`;
+                    }
+                } catch (error) {
+                    exibirMensagemFeedback(DOMElements.adminGlobalMessage, `Erro ao processar CSV: ${error.message}`, 'error', 4000);
+                }
+                event.target.value = ''; 
+            };
+            reader.onerror = function() {
+                exibirMensagemFeedback(DOMElements.adminGlobalMessage, 'Não foi possível ler o arquivo.', 'error', 4000);
+                event.target.value = ''; 
+            };
+            reader.readAsText(arquivo, 'UTF-8'); 
+        }
+
+        function handleAdicionarUsuario(event) {
+            event.preventDefault();
+            const newUsername = DOMElements.newUsernameInput.value.trim();
+            const newPassword = DOMElements.newPasswordInput.value.trim();
+            exibirMensagemFeedback(DOMElements.adminAddUserMessage, ''); 
+
+            if (!newUsername || !newPassword) {
+                exibirMensagemFeedback(DOMElements.adminAddUserMessage, "Nome de usuário e senha são obrigatórios.", 'error');
+                return;
+            }
+            if (mockUsuarios.find(u => u.username === newUsername)) {
+                exibirMensagemFeedback(DOMElements.adminAddUserMessage, `O nome de usuário '${newUsername}' já existe.`, 'error');
+                return;
+            }
+            mockUsuarios.push({ username: newUsername, password: newPassword, role: 'user', assignedCSV: null });
+            exibirMensagemFeedback(DOMElements.adminAddUserMessage, `Usuário '${newUsername}' adicionado com sucesso!`, 'success', 3000);
+            DOMElements.formAdicionarUsuario.reset(); 
+            renderAdminPanel(); 
+        }
+
+        function handleRemoverUsuario(usernameToRemove) {
+            const userIndex = mockUsuarios.findIndex(user => user.username === usernameToRemove && user.role === 'user');
+            if (userIndex > -1) {
+                mockUsuarios.splice(userIndex, 1); 
+                exibirMensagemFeedback(DOMElements.adminGlobalMessage, `Usuário '${usernameToRemove}' removido com sucesso!`, 'success', 3000);
+                renderAdminPanel(); 
+            } else {
+                exibirMensagemFeedback(DOMElements.adminGlobalMessage, `Erro: Usuário '${usernameToRemove}' não encontrado ou não pode ser removido.`, 'error', 3000);
+            }
+        }
+
+        function saveUserChanges(originalUsername, newUsernameValue, newPasswordValue) { 
+            const userToUpdate = mockUsuarios.find(u => u.username === originalUsername);
+            exibirMensagemFeedback(DOMElements.adminGlobalMessage, ''); 
+
+            const newUsername = newUsernameValue.trim();
+            const newPassword = newPasswordValue.trim();
+
+            if (!userToUpdate) {
+                exibirMensagemFeedback(DOMElements.adminGlobalMessage, `Erro: Usuário original '${originalUsername}' não encontrado.`, 'error', 4000);
+                return;
+            }
+
+            if (!newUsername) {
+                 exibirMensagemFeedback(DOMElements.adminGlobalMessage, `Erro: O novo nome de usuário para '${originalUsername}' não pode ser vazio.`, 'error', 4000);
+                return;
+            }
+            if (newUsername !== originalUsername && mockUsuarios.some(u => u.username === newUsername)) {
+                exibirMensagemFeedback(DOMElements.adminGlobalMessage, `Erro: O nome de usuário '${newUsername}' já está em uso.`, 'error', 4000);
+                return;
+            }
+            if (!newPassword) {
+                exibirMensagemFeedback(DOMElements.adminGlobalMessage, `Erro: A senha para '${newUsername}' não pode ser vazia.`, 'error', 4000);
+                return; 
+            }
+
+            userToUpdate.username = newUsername;
+            userToUpdate.password = newPassword;
+            
+            exibirMensagemFeedback(DOMElements.adminGlobalMessage, `Dados do usuário '${newUsername}' (anteriormente '${originalUsername}') atualizados!`, 'success', 3000);
+            renderAdminPanel(); 
+        }
+
+
+        // --- Funções do Visualizador de Dados ---
+        function popularSeletorDeColunas() {
+            DOMElements.colunasVisiveisContainer.innerHTML = ''; 
+            if (csvHeaders.length === 0) {
+                colunasSelecionadas = [];
+                return;
+            }
+
+            csvHeaders.forEach(header => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `coluna-${header.replace(/\s+/g, '-')}`; 
+                checkbox.value = header;
+                checkbox.checked = colunasSelecionadas.includes(header); 
+                checkbox.className = 'mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600';
+
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                label.textContent = header;
+                label.className = 'text-sm text-gray-700 dark:text-gray-300 cursor-pointer';
+
+                checkbox.addEventListener('change', (event) => {
+                    if (event.target.checked) {
+                        if (!colunasSelecionadas.includes(header)) {
+                            colunasSelecionadas.push(header);
+                        }
+                    } else {
+                        colunasSelecionadas = colunasSelecionadas.filter(col => col !== header);
+                    }
+                    aplicarFiltro(); 
+                });
+
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                DOMElements.colunasVisiveisContainer.appendChild(div);
+            });
+        }
+
+        function popularFiltroColuna() {
+            DOMElements.filtroColunaSelect.innerHTML = '<option value="">Selecione uma coluna</option>'; 
+            if (csvHeaders.length === 0) {
+                DOMElements.filtroColunaSelect.disabled = true;
+                DOMElements.filtroPesquisaInput.disabled = true; 
+                return;
+            }
+            DOMElements.filtroColunaSelect.disabled = false;
+            csvHeaders.forEach(header => {
+                const option = document.createElement('option');
+                option.value = header;
+                option.textContent = header;
+                DOMElements.filtroColunaSelect.appendChild(option);
+            });
+            atualizarEstadoCampoPesquisa();
+        }
+        
+        function atualizarEstadoCampoPesquisa() {
+            const colunaSelecionada = DOMElements.filtroColunaSelect.value;
+            if (colunaSelecionada) {
+                DOMElements.filtroPesquisaInput.disabled = false;
+            } else {
+                DOMElements.filtroPesquisaInput.disabled = true;
+                DOMElements.filtroPesquisaInput.value = ''; 
+            }
+            aplicarFiltro(); 
+        }
+
+        function renderizarTabela(pessoas) {
+            DOMElements.tabelaCabecalho.innerHTML = ''; 
+            DOMElements.tabelaCorpo.innerHTML = '';    
+            const headersParaRenderizar = colunasSelecionadas.length > 0 ? colunasSelecionadas : csvHeaders;
+
+             if (headersParaRenderizar.length === 0 && pessoas.length === 0) {
+                 exibirMensagemFeedback(DOMElements.mensagemSemDados, ''); 
+                 DOMElements.tabelaCabecalho.classList.add('hidden');
+                 DOMElements.tabelaCorpo.classList.add('hidden');
+                 atualizarContagemPessoasExibidas(0);
+                 return;
+            }
+            
+            if (headersParaRenderizar.length > 0) {
+                DOMElements.tabelaCabecalho.classList.remove('hidden');
+                const trHeader = document.createElement('tr');
+                headersParaRenderizar.forEach(headerText => {
+                    const th = document.createElement('th');
+                    th.scope = "col";
+                    th.className = "px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider";
+                    th.textContent = headerText;
+                    trHeader.appendChild(th);
+                });
+                DOMElements.tabelaCabecalho.appendChild(trHeader);
+            }
+
+            if (pessoas.length === 0) { 
+                exibirMensagemFeedback(DOMElements.mensagemSemDados, ''); 
+                DOMElements.tabelaCorpo.classList.add('hidden');
+            } else {
+                exibirMensagemFeedback(DOMElements.mensagemSemDados, ''); 
+                DOMElements.tabelaCorpo.classList.remove('hidden');
+                pessoas.forEach(pessoa => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150";
+                    headersParaRenderizar.forEach(header => { 
+                        const td = document.createElement('td');
+                        td.className = "px-4 py-3 whitespace-nowrap text-sm";
+                        if (header.toLowerCase() === headersParaRenderizar[0].toLowerCase()) { 
+                             td.classList.add("font-medium", "text-gray-900", "dark:text-gray-100");
+                        } else {
+                             td.classList.add("text-gray-700", "dark:text-gray-300");
+                        }
+                        td.textContent = pessoa[header] !== undefined ? pessoa[header] : ''; 
+                        tr.appendChild(td);
+                    });
+                    DOMElements.tabelaCorpo.appendChild(tr);
+                });
+            }
+            atualizarContagemPessoasExibidas(pessoas.length);
+        }
+
+        function atualizarContagemTotalBase() {
+            DOMElements.totalBase.textContent = dadosPessoas.length;
+        }
+
+        function atualizarContagemPessoasExibidas(count) {
+            DOMElements.pessoasExibidas.textContent = count;
+        }
+
+        function aplicarFiltro() {
+            const colunaFiltrar = DOMElements.filtroColunaSelect.value;
+            const termoPesquisa = DOMElements.filtroPesquisaInput.value.toLowerCase().trim();
+            let dadosFiltrados = dadosPessoas;
+
+            if (dadosPessoas.length === 0) {
+                renderizarTabela([]); 
+                return;
+            }
+
+            if (colunaFiltrar && termoPesquisa) {
+                dadosFiltrados = dadosPessoas.filter(pessoa => {
+                    const valorColuna = pessoa[colunaFiltrar];
+                    if (valorColuna !== undefined && valorColuna !== null) {
+                        return String(valorColuna).toLowerCase().includes(termoPesquisa);
+                    }
+                    return false; 
+                });
+            }
+            renderizarTabela(dadosFiltrados);
+        }
+
+        function processarCSVManualmente(event) { 
+            const arquivo = event.target.files[0];
+            exibirMensagemFeedback(DOMElements.mensagemUploadCSV, ''); 
+            
+            if (!arquivo) {
+                exibirMensagemFeedback(DOMElements.mensagemUploadCSV, 'Nenhum arquivo selecionado.', 'warning');
+                return;
+            }
+            if (arquivo.type !== 'text/csv' && !arquivo.name.endsWith('.csv')) {
+                 exibirMensagemFeedback(DOMElements.mensagemUploadCSV, 'Formato de arquivo inválido. Por favor, selecione um arquivo .csv.', 'error');
+                 return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const {headers: localCsvHeaders, data: localDadosPessoas} = parseCSVContent(e.target.result);
+                    csvHeaders = localCsvHeaders;
+                    dadosPessoas = localDadosPessoas;
+                    colunasSelecionadas = [...csvHeaders]; 
+                    popularSeletorDeColunas(); 
+                    
+                    exibirMensagemFeedback(DOMElements.mensagemUploadCSV, `Arquivo "${arquivo.name}" carregado com ${dadosPessoas.length} registros.`, 'success', 4000);
+                    atualizarContagemTotalBase();
+                    popularFiltroColuna(); 
+                } catch (error) {
+                    console.error("Erro ao processar CSV:", error);
+                    exibirMensagemFeedback(DOMElements.mensagemUploadCSV, `Erro ao ler o arquivo CSV: ${error.message}`, 'error');
+                    resetVisualizadorState(); 
+                }
+            };
+            reader.onerror = function() {
+                exibirMensagemFeedback(DOMElements.mensagemUploadCSV, 'Não foi possível ler o arquivo.', 'error');
+            };
+            reader.readAsText(arquivo, 'UTF-8'); 
+        }
+
+        // --- Inicialização e Event Listeners ---
+        document.addEventListener('DOMContentLoaded', () => {
+            DOMElements.formLogin.addEventListener('submit', tentarLogin);
+            DOMElements.botaoLogoutAdmin.addEventListener('click', fazerLogout);
+            DOMElements.botaoLogoutUser.addEventListener('click', fazerLogout);
+            
+            if(DOMElements.formAdicionarUsuario) { 
+                DOMElements.formAdicionarUsuario.addEventListener('submit', handleAdicionarUsuario);
+            }
+
+            DOMElements.botaoCarregarCSV.addEventListener('click', () => {
+                if (DOMElements.arquivoCSVInput.files.length > 0) {
+                    processarCSVManualmente({ target: DOMElements.arquivoCSVInput });
+                } else {
+                    exibirMensagemFeedback(DOMElements.mensagemUploadCSV, 'Por favor, selecione um arquivo CSV primeiro.', 'warning');
+                }
+            });
+            DOMElements.filtroColunaSelect.addEventListener('change', atualizarEstadoCampoPesquisa);
+            DOMElements.filtroPesquisaInput.addEventListener('input', aplicarFiltro); 
+            
+            DOMElements.telaAdmin.classList.add('hidden');
+            DOMElements.conteudoPrincipal.classList.add('hidden');
+            resetVisualizadorState();
+        });
+    </script>
+</body>
+</html>
