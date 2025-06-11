@@ -220,8 +220,9 @@
         let colunasSelecionadas = []; 
         let currentUser = null;
         let mockUsuarios = [
-            { username: "admin", password: "123", role: "admin", assignedCSV: null },
-            { username: "Neto", password: "Izalci@22", role: "user", assignedCSV: null }
+            { username: "admin", password: "090820", role: "admin", assignedCSV: null },
+            { username: "Neto", password: "Izalci@22", role: "user", assignedCSV: null },
+            { username: "Jader", password: "275948", role: "user", assignedCSV: null }
         ];
 
         // --- Seletores de DOM ---
@@ -380,81 +381,39 @@
         function criarUserCardAdmin(user) {
             const userCard = document.createElement('div');
             userCard.className = 'bg-gray-200 dark:bg-gray-700 p-4 rounded-lg shadow-md';
+            userCard.innerHTML = `
+                <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome de Usuário (Atual: ${user.username}):</label>
+                    <input type="text" id="inputUsername-${user.username}" class="p-2 border border-gray-300 dark:border-gray-600 rounded-md w-full text-sm" value="${user.username}">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start mb-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nova Senha:</label>
+                        <input type="text" id="inputPassword-${user.username}" class="p-2 border border-gray-300 dark:border-gray-600 rounded-md w-full text-sm" value="${user.password}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Designar CSV:</label>
+                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-1" id="csv-name-${user.username}">${user.assignedCSV ? `Atual: ${user.assignedCSV.filename}` : 'Nenhum CSV designado.'}</p>
+                        <input type="file" accept=".csv" class="w-full text-sm mb-2 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 dark:file:bg-blue-800 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-700 cursor-pointer">
+                    </div>
+                </div>
+                <div class="flex space-x-3 mt-4">
+                    <button class="save-changes-btn bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md text-sm transition duration-150 ease-in-out">Salvar Alterações</button>
+                    <button class="remove-user-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md text-sm transition duration-150 ease-in-out">Remover Usuário</button>
+                </div>
+            `;
 
-            const userGroup = document.createElement('div');
-            userGroup.className = 'mb-3';
-            const userLabel = document.createElement('label');
-            userLabel.className = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
-            userLabel.textContent = `Nome de Usuário (Atual: ${user.username}):`;
-            const inputUsername = document.createElement('input');
-            inputUsername.type = 'text';
-            inputUsername.id = `inputUsername-${user.username}`; 
-            inputUsername.className = `p-2 border border-gray-300 dark:border-gray-600 rounded-md w-full text-sm`;
-            inputUsername.value = user.username;
-            userGroup.appendChild(userLabel);
-            userGroup.appendChild(inputUsername);
-            userCard.appendChild(userGroup);
-
-            const formGrid = document.createElement('div');
-            formGrid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-4 items-start mb-3';
-
-            const passGroup = document.createElement('div');
-            const passLabel = document.createElement('label');
-            passLabel.className = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
-            passLabel.textContent = 'Nova Senha:'; 
-            const inputPassword = document.createElement('input');
-            inputPassword.type = 'text'; 
-            inputPassword.id = `inputPassword-${user.username}`; 
-            inputPassword.className = `p-2 border border-gray-300 dark:border-gray-600 rounded-md w-full text-sm`;
-            inputPassword.value = user.password;
-            passGroup.appendChild(passLabel);
-            passGroup.appendChild(inputPassword);
-            formGrid.appendChild(passGroup);
-
-            const csvGroup = document.createElement('div');
-            const csvLabel = document.createElement('label');
-            csvLabel.className = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
-            csvLabel.textContent = 'Designar CSV:';
+            const inputFile = userCard.querySelector('input[type="file"]');
+            inputFile.onchange = (event) => handleAdminCSVUpload(event, user.username);
             
-            const currentCSVName = document.createElement('p');
-            currentCSVName.className = 'text-xs text-gray-600 dark:text-gray-400 mb-1';
-            currentCSVName.id = `csv-name-${user.username}`; 
-            currentCSVName.textContent = user.assignedCSV ? `Atual: ${user.assignedCSV.filename}` : 'Nenhum CSV designado.';
-            
-            const inputFileCSV = document.createElement('input');
-            inputFileCSV.type = 'file';
-            inputFileCSV.accept = '.csv';
-            inputFileCSV.className = `w-full text-sm mb-2
-                file:mr-2 file:py-1 file:px-2
-                file:rounded-md file:border-0
-                file:text-xs file:font-semibold
-                file:bg-blue-50 dark:file:bg-blue-800 file:text-blue-700 dark:file:text-blue-300
-                hover:file:bg-blue-100 dark:hover:file:bg-blue-700 cursor-pointer`;
-            inputFileCSV.onchange = (event) => handleAdminCSVUpload(event, user.username);
-
-            csvGroup.appendChild(csvLabel);
-            csvGroup.appendChild(currentCSVName);
-            csvGroup.appendChild(inputFileCSV);
-            formGrid.appendChild(csvGroup);
-            
-            userCard.appendChild(formGrid);
-
-            const buttonsDiv = document.createElement('div');
-            buttonsDiv.className = 'flex space-x-3 mt-4';
-
-            const saveButton = document.createElement('button');
-            saveButton.textContent = 'Salvar Alterações'; 
-            saveButton.className = 'bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md text-sm transition duration-150 ease-in-out';
+            const saveButton = userCard.querySelector('.save-changes-btn');
+            const inputUsername = userCard.querySelector(`#inputUsername-${user.username}`);
+            const inputPassword = userCard.querySelector(`#inputPassword-${user.username}`);
             saveButton.onclick = () => saveUserChanges(user.username, inputUsername.value, inputPassword.value);
-            buttonsDiv.appendChild(saveButton);
 
-            const removeButton = document.createElement('button');
-            removeButton.textContent = 'Remover Usuário';
-            removeButton.className = 'bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md text-sm transition duration-150 ease-in-out';
+            const removeButton = userCard.querySelector('.remove-user-btn');
             removeButton.onclick = () => handleRemoverUsuario(user.username);
-            buttonsDiv.appendChild(removeButton);
-            
-            userCard.appendChild(buttonsDiv);
+
             return userCard;
         }
         
@@ -760,8 +719,11 @@
         // --- Inicialização e Event Listeners ---
         document.addEventListener('DOMContentLoaded', () => {
             DOMElements.formLogin.addEventListener('submit', tentarLogin);
-            DOMElements.botaoLogoutAdmin.addEventListener('click', fazerLogout);
-            DOMElements.botaoLogoutUser.addEventListener('click', fazerLogout);
+            
+            // Unificado listener para ambos os botões de logout
+            document.querySelectorAll('#botaoLogoutAdmin, #botaoLogoutUser').forEach(btn => {
+                btn.addEventListener('click', fazerLogout);
+            });
             
             if(DOMElements.formAdicionarUsuario) { 
                 DOMElements.formAdicionarUsuario.addEventListener('submit', handleAdicionarUsuario);
