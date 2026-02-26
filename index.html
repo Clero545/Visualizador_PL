@@ -22,7 +22,7 @@
             padding: 1rem; 
         }
         @media (prefers-color-scheme: dark) {
-            select, input[type="text"], input[type="password"], input[type="file"]::file-selector-button, input[type="checkbox"] {
+            select, input[type="text"], input[type="password"], input[type="file"]::file-selector-button, input[type="checkbox"], input[type="number"] {
                 background-color: #374151; color: #f3f4f6; border-color: #4b5563;
             }
             input[type="checkbox"] { accent-color: #3b82f6; }
@@ -33,11 +33,12 @@
             input[type="file"]::file-selector-button:hover { background-color: #4b5563; }
         }
         input[type="file"] { border: 1px solid; border-radius: 0.375rem; padding: 0.25rem; }
-        input[type="text"], input[type="password"] {
+        input[type="text"], input[type="password"], input[type="number"] {
              border: 1px solid #D1D5DB; padding: 0.5rem; border-radius: 0.375rem;
              box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); width: 100%;
         }
-        input[type="text"]:focus, input[type="password"]:focus {
+        input[type="number"] { width: 6.5rem; text-align: center; } 
+        input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus {
             outline: 2px solid transparent; outline-offset: 2px; border-color: #2563EB;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
         }
@@ -123,23 +124,21 @@
     </div>
 
     <div id="updateModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg mx-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg mx-4 border border-gray-200 dark:border-gray-700">
             <div class="flex justify-between items-center border-b pb-3 dark:border-gray-600">
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Atualizações Recentes - 13/06/2025</h3>
+                <h3 class="text-xl font-bold">Atualizações Recentes - 13/06/2025</h3>
                 <button id="closeUpdateModalBtn" class="text-gray-500 text-2xl leading-none hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">&times;</button>
             </div>
             <div class="mt-4">
                 <ul class="list-disc list-inside mt-2 space-y-3 text-gray-600 dark:text-gray-400">
-                    <li><strong class="text-gray-800 dark:text-gray-200">Login Facilitado:</strong> Agora você pode entrar com seu nome de usuário sem se preocupar com letras maiúsculas ou minúsculas.</li>
-                    <li><strong class="text-gray-800 dark:text-gray-200">Notificação Melhorada:</strong> A mensagem de boas-vindas agora aparece maior e no canto esquerdo da tela.</li>
-                    <li><strong class="text-gray-800 dark:text-gray-200">Interface Mais Limpa:</strong> Adicionamos setas para que você possa esconder ou mostrar as seções de "Carregar Dados" e "Colunas Visíveis".</li>
-                    <li><strong class="text-gray-800 dark:text-gray-200">Paginação Inteligente:</strong> A navegação em tabelas grandes agora é mais fácil, mostrando apenas as páginas mais importantes.</li>
-                    <li><strong class="text-gray-800 dark:text-gray-200">Gerenciamento (Admin):</strong> Administradores agora podem editar o nome de usuários existentes.</li>
+                    <li><strong class="text-gray-800 dark:text-gray-200">Exportação de Dados:</strong> Baixe um arquivo CSV contendo exatamente o que está vendo na tela.</li>
+                    <li><strong class="text-gray-800 dark:text-gray-200">Login Facilitado:</strong> Entre com seu usuário sem se preocupar com letras maiúsculas ou minúsculas.</li>
+                    <li><strong class="text-gray-800 dark:text-gray-200">Visualização Admin:</strong> Agora o administrador pode alternar entre a gestão e a visualização do site.</li>
                 </ul>
             </div>
             <div class="mt-6 text-right">
-                <button id="okUpdateModalBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md">
-                    Ok
+                <button id="okUpdateModalBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-md">
+                    Entendido
                 </button>
             </div>
         </div>
@@ -174,11 +173,16 @@
         <header class="mb-8">
             <div class="flex justify-between items-center mb-2">
                 <h1 class="text-3xl md:text-4xl font-bold text-green-600 dark:text-green-400">Painel do Administrador</h1>
-                <button class="logout-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-3 rounded-md shadow-md text-sm transition duration-150 ease-in-out">
-                    Sair
-                </button>
+                <div class="flex space-x-2">
+                    <button id="botaoVisualizar" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-3 rounded-md shadow-md text-sm transition duration-150 ease-in-out">
+                        Visualizar
+                    </button>
+                    <button class="logout-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-3 rounded-md shadow-md text-sm transition duration-150 ease-in-out">
+                        Sair
+                    </button>
+                </div>
             </div>
-            <p class="text-md text-gray-600 dark:text-gray-400">Gerenciar usuários e designar CSVs por upload.</p>
+            <p class="text-md text-gray-600 dark:text-gray-400">Gerenciar usuários e informações de acesso.</p>
             <p id="adminGlobalMessage" class="mt-2 text-sm font-semibold"></p>
         </header>
 
@@ -212,10 +216,16 @@
         <header class="mb-8">
             <div class="relative flex justify-center items-center py-2">
                 <h1 class="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400 text-center">Visualizador de Base de Dados</h1>
-                <div class="absolute right-0">
-                    <button class="logout-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-3 rounded-md shadow-md text-sm transition duration-150 ease-in-out">
-                        Sair
-                    </button>
+                <div class="absolute right-0 flex flex-col items-center">
+                    <span id="loggedInUserName" class="block text-md font-medium text-gray-700 dark:text-gray-200 mb-1"></span>
+                    <div class="flex space-x-2">
+                        <button id="botaoVoltarAdmin" class="hidden bg-blue-500 hover:bg-blue-600 text-white font-semibold py-1 px-3 rounded-md shadow-md text-sm transition duration-150 ease-in-out">
+                            Gerenciar
+                        </button>
+                        <button class="logout-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded-md shadow-md text-sm transition duration-150 ease-in-out">
+                            Sair
+                        </button>
+                    </div>
                 </div>
             </div>
             <p id="mensagemCSVInfo" class="text-md text-gray-600 dark:text-gray-400 mt-4 text-center"></p>
@@ -268,23 +278,30 @@
                 <div id="colunasVisiveisContainer" class="colunas-visiveis-container bg-gray-50 dark:bg-gray-700/50 mt-2">
                     </div>
             </div>
-             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                 <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-md text-center">
+             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                 <div class="bg-blue-50 dark:bg-blue-900/40 p-4 rounded-md text-center">
                     <h2 class="text-lg font-semibold text-blue-700 dark:text-blue-300">Total de Registros</h2>
                     <p id="totalBase" class="text-2xl font-bold text-blue-600 dark:text-blue-400">0</p>
                 </div>
-                <div class="bg-green-50 dark:bg-green-900 p-4 rounded-md text-center">
+                <div class="bg-green-50 dark:bg-green-900/40 p-4 rounded-md text-center">
                     <h2 class="text-lg font-semibold text-green-700 dark:text-green-300">Registros Exibidos</h2>
                     <p id="pessoasExibidas" class="text-2xl font-bold text-green-600 dark:text-green-400">0</p>
                 </div>
             </div>
+            <div class="flex justify-center sm:justify-end">
+                <button id="botaoExportarCSV" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-md shadow-md transition duration-150 ease-in-out flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <span>Exportar Dados Filtrados (CSV)</span>
+                </button>
+            </div>
         </div>
+
         <div class="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-lg table-container">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead id="tabelaCabecalho" class="bg-gray-50 dark:bg-gray-700"></thead>
                 <tbody id="tabelaCorpo" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"></tbody>
             </table>
-            <div id="paginacaoContainer" class="flex justify-center items-center mt-4 space-x-2"></div>
+            <div id="paginacaoContainer" class="flex flex-wrap justify-center items-center mt-6 gap-2"></div>
             <div id="mensagemSemDados" class="text-center py-8 text-gray-500 dark:text-gray-400 hidden"></div>
         </div>
         <footer class="text-center mt-12 py-4 border-t border-gray-200 dark:border-gray-700">
@@ -295,12 +312,13 @@
     <script>
         // --- Estado da Aplicação ---
         let dadosPessoas = [];
+        let dadosFiltradosAtuais = [];
         let csvHeaders = []; 
         let colunasSelecionadas = []; 
         let currentUser = null;
         let mockUsuarios = [
             { username: "admin", password: "090820", role: "admin", assignedCSV: null },
-            { username: "Neto", password: "Izalci@22", role: "user", assignedCSV: null },
+            { username: "Davi", password: "Izalci@22", role: "user", assignedCSV: null },
             { username: "Jader", password: "275948", role: "user", assignedCSV: null }
         ];
         let currentPage = 1;
@@ -317,12 +335,15 @@
             passwordInput: document.getElementById('password'),
             mensagemLogin: document.getElementById('mensagemLogin'),
             botoesLogout: document.querySelectorAll('.logout-btn'),
+            botaoVisualizar: document.getElementById('botaoVisualizar'),
+            botaoVoltarAdmin: document.getElementById('botaoVoltarAdmin'),
             listaUsuariosAdmin: document.getElementById('listaUsuariosAdmin'),
             adminGlobalMessage: document.getElementById('adminGlobalMessage'),
             formAdicionarUsuario: document.getElementById('formAdicionarUsuario'),
             newUsernameInput: document.getElementById('newUsername'),
             newPasswordInput: document.getElementById('newPassword'),
             adminAddUserMessage: document.getElementById('adminAddUserMessage'),
+            loggedInUserName: document.getElementById('loggedInUserName'), 
             welcomeNotification: document.getElementById('welcomeNotification'),
             welcomeNotificationText: document.getElementById('welcomeNotificationText'),
             closeWelcomeNotificationBtn: document.getElementById('closeWelcomeNotificationBtn'),
@@ -348,6 +369,7 @@
             mensagemSemDados: document.getElementById('mensagemSemDados'),
             arquivoCSVInput: document.getElementById('arquivoCSV'),
             botaoCarregarCSV: document.getElementById('botaoCarregarCSV'),
+            botaoExportarCSV: document.getElementById('botaoExportarCSV'),
             mensagemUploadCSV: document.getElementById('mensagemUploadCSV'),
             currentYear: document.getElementById('currentYear')
         };
@@ -374,29 +396,27 @@
                 setTimeout(() => {
                     elemento.textContent = '';
                     elemento.classList.add('hidden');
-                    elemento.classList.remove('feedback-success', 'feedback-error', 'feedback-warning', 'text-gray-600', 'dark:text-gray-400');
                 }, desaparecerApos);
             }
         }
+
+        // Alias para compatibilidade
+        const setFeedback = exibirMensagemFeedback;
 
         function parseCSVContent(textoCSV) {
             const linhas = textoCSV.split(/\r\n|\n/).filter(linha => linha.trim() !== ''); 
             if (linhas.length < 1) { throw new Error("CSV vazio ou inválido.");}
             const headers = linhas[0].split(',').map(h => h.trim().replace(/^"|"$/g, '')); 
-            if (headers.some(h => h === '')) { throw new Error("CSV contém cabeçalhos vazios.");}
-            const data = [];
-            for (let i = 1; i < linhas.length; i++) {
-                const colunas = linhas[i].split(',');
+            const data = linhas.slice(1).map(linha => {
+                const colunas = linha.split(',');
                 const item = {};
-                for (let j = 0; j < headers.length; j++) {
-                    item[headers[j]] = colunas[j] ? colunas[j].trim().replace(/^"|"$/g, '') : ''; 
-                }
-                data.push(item);
-            }
+                headers.forEach((h, i) => item[h] = colunas[i] ? colunas[i].trim().replace(/^"|"$/g, '') : '');
+                return item;
+            });
             return { headers, data };
         }
 
-        // --- Funções de Login e Gerenciamento de Tela ---
+        // --- Funções de Login e Sessão ---
         function tentarLogin(event) {
             event.preventDefault(); 
             const username = DOMElements.usernameInput.value.toLowerCase().trim();
@@ -407,19 +427,15 @@
                 currentUser = { ...usuarioEncontrado }; 
                 DOMElements.telaLogin.classList.add('hidden');
                 DOMElements.recentUpdateBtn.classList.add('hidden');
-                exibirMensagemFeedback(DOMElements.mensagemLogin, ''); 
                 if (currentUser.role === 'admin') {
                     DOMElements.telaAdmin.classList.remove('hidden');
-                    DOMElements.conteudoPrincipal.classList.add('hidden');
                     renderAdminPanel(); 
                 } else { 
-                    DOMElements.telaAdmin.classList.add('hidden');
                     DOMElements.conteudoPrincipal.classList.remove('hidden');
                     setupUserView();
                 }
             } else {
                 exibirMensagemFeedback(DOMElements.mensagemLogin, 'Usuário ou senha inválidos.', 'error');
-                currentUser = null;
             }
         }
 
@@ -429,8 +445,8 @@
             DOMElements.conteudoPrincipal.classList.add('hidden');
             DOMElements.telaAdmin.classList.add('hidden');
             DOMElements.recentUpdateBtn.classList.remove('hidden');
-            DOMElements.usernameInput.value = ''; 
-            DOMElements.passwordInput.value = '';
+            DOMElements.botaoVoltarAdmin.classList.add('hidden');
+            DOMElements.usernameInput.value = ''; DOMElements.passwordInput.value = '';
             resetVisualizadorState();
             exibirMensagemFeedback(DOMElements.adminGlobalMessage, ''); 
             exibirMensagemFeedback(DOMElements.adminAddUserMessage, ''); 
@@ -438,27 +454,24 @@
         }
         
         function resetVisualizadorState() {
-            dadosPessoas = [];
-            csvHeaders = [];
-            colunasSelecionadas = []; 
-            currentPage = 1;
-            if (DOMElements.colunasVisiveisContainer) DOMElements.colunasVisiveisContainer.innerHTML = ''; 
+            dadosPessoas = []; dadosFiltradosAtuais = []; csvHeaders = []; colunasSelecionadas = []; currentPage = 1;
+            DOMElements.colunasVisiveisContainer.innerHTML = ''; 
+            DOMElements.loggedInUserName.textContent = '';
             atualizarContagemTotalBase();
             popularFiltroColuna(); 
-            renderizarTabela([]); 
-            renderizarPaginacao(0);
-            exibirMensagemFeedback(DOMElements.mensagemUploadCSV, '');
-            if(DOMElements.arquivoCSVInput) DOMElements.arquivoCSVInput.value = ''; 
-            if(DOMElements.mensagemCSVInfo) exibirMensagemFeedback(DOMElements.mensagemCSVInfo, '');
-            if(DOMElements.filtroPesquisaInput) DOMElements.filtroPesquisaInput.value = '';
+            renderizarTabela([]); renderizarPaginacao(0);
             DOMElements.uploadManualSection.classList.remove('hidden'); 
-            exibirMensagemFeedback(DOMElements.mensagemSemDados, ''); 
         }
 
         function setupUserView() {
             resetVisualizadorState(); 
-            
             if (currentUser) {
+                DOMElements.loggedInUserName.textContent = currentUser.username;
+                
+                if (currentUser.role === 'admin') {
+                    DOMElements.botaoVoltarAdmin.classList.remove('hidden');
+                }
+
                 DOMElements.welcomeNotificationText.textContent = `Bem-vindo(a), ${currentUser.username}!`;
                 DOMElements.welcomeNotification.classList.remove('hidden', 'opacity-0', '-translate-x-full');
                 DOMElements.welcomeNotification.classList.add('show');
@@ -470,475 +483,253 @@
             }
 
             if (currentUser && currentUser.assignedCSV && currentUser.assignedCSV.data) {
-                exibirMensagemFeedback(DOMElements.mensagemCSVInfo, `Dados carregados automaticamente: "${currentUser.assignedCSV.filename}" (designado pelo admin).`, 'info');
                 csvHeaders = currentUser.assignedCSV.headers;
                 dadosPessoas = currentUser.assignedCSV.data;
                 colunasSelecionadas = [...csvHeaders]; 
-                popularSeletorDeColunas(); 
-                
-                atualizarContagemTotalBase();
-                popularFiltroColuna(); 
+                popularSeletorDeColunas(); atualizarContagemTotalBase(); popularFiltroColuna(); 
                 DOMElements.uploadManualSection.classList.add('hidden'); 
-            } else if (currentUser) {
-                 exibirMensagemFeedback(DOMElements.mensagemCSVInfo, `Nenhum CSV foi designado. Carregue um arquivo manualmente.`, 'warning');
-                 DOMElements.uploadManualSection.classList.remove('hidden'); 
-                 if (DOMElements.colunasVisiveisContainer) DOMElements.colunasVisiveisContainer.innerHTML = '';
-                 colunasSelecionadas = [];
             }
-             aplicarFiltro(); 
+            aplicarFiltro(); 
         }
 
-        // --- Funções do Painel Admin ---
-        function criarUserCardAdmin(user) {
-            const userCard = document.createElement('div');
-            userCard.className = 'bg-gray-200 dark:bg-gray-700 p-4 rounded-lg shadow-md';
-            userCard.innerHTML = `
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome de Usuário (Atual: ${user.username}):</label>
-                    <input type="text" id="inputUsername-${user.username}" class="p-2 border border-gray-300 dark:border-gray-600 rounded-md w-full text-sm" value="${user.username}">
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start mb-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nova Senha:</label>
-                        <input type="text" id="inputPassword-${user.username}" class="p-2 border border-gray-300 dark:border-gray-600 rounded-md w-full text-sm" value="${user.password}">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Designar CSV:</label>
-                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-1" id="csv-name-${user.username}">${user.assignedCSV ? `Atual: ${user.assignedCSV.filename}` : 'Nenhum CSV designado.'}</p>
-                        <input type="file" accept=".csv" class="w-full text-sm mb-2 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 dark:file:bg-blue-800 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-700 cursor-pointer">
-                    </div>
-                </div>
-                <div class="flex space-x-3 mt-4">
-                    <button class="save-changes-btn bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md text-sm transition duration-150 ease-in-out">Salvar Alterações</button>
-                    <button class="remove-user-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md text-sm transition duration-150 ease-in-out">Remover Usuário</button>
-                </div>
-            `;
-
-            const inputFile = userCard.querySelector('input[type="file"]');
-            inputFile.onchange = (event) => handleAdminCSVUpload(event, user.username);
-            
-            const saveButton = userCard.querySelector('.save-changes-btn');
-            const inputUsername = userCard.querySelector(`#inputUsername-${user.username}`);
-            const inputPassword = userCard.querySelector(`#inputPassword-${user.username}`);
-            saveButton.onclick = () => saveUserChanges(user.username, inputUsername.value, inputPassword.value);
-
-            const removeButton = userCard.querySelector('.remove-user-btn');
-            removeButton.onclick = () => handleRemoverUsuario(user.username);
-
-            return userCard;
-        }
-        
+        // --- Funções Administrativas ---
         function renderAdminPanel() {
             DOMElements.listaUsuariosAdmin.innerHTML = ''; 
-            mockUsuarios.forEach(user => {
-                if (user.role === 'user') { 
-                    const userCard = criarUserCardAdmin(user);
-                    DOMElements.listaUsuariosAdmin.appendChild(userCard);
-                }
+            mockUsuarios.filter(u => u.role === 'user').forEach(user => {
+                const card = criarUserCardAdmin(user);
+                DOMElements.listaUsuariosAdmin.appendChild(card);
             });
-            exibirMensagemFeedback(DOMElements.adminGlobalMessage, '');
-            exibirMensagemFeedback(DOMElements.adminAddUserMessage, '');
-            if(DOMElements.formAdicionarUsuario) DOMElements.formAdicionarUsuario.reset();
-        }
-        
-        function handleAdminCSVUpload(event, usernameForAssign) {
-            const arquivo = event.target.files[0];
-            exibirMensagemFeedback(DOMElements.adminGlobalMessage, ''); 
-
-            if (!arquivo) return; 
-
-            if (arquivo.type !== 'text/csv' && !arquivo.name.endsWith('.csv')) {
-                 exibirMensagemFeedback(DOMElements.adminGlobalMessage, 'Formato de arquivo inválido. Por favor, selecione um arquivo .csv.', 'error', 4000);
-                 event.target.value = ''; 
-                 return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const { headers, data } = parseCSVContent(e.target.result);
-                    const userToUpdate = mockUsuarios.find(u => u.username === usernameForAssign);
-                    if (userToUpdate) {
-                        userToUpdate.assignedCSV = { filename: arquivo.name, headers, data };
-                        exibirMensagemFeedback(DOMElements.adminGlobalMessage, `CSV '${arquivo.name}' designado para '${usernameForAssign}' com sucesso!`, 'success', 4000);
-                        const csvNameEl = document.getElementById(`csv-name-${usernameForAssign}`);
-                        if(csvNameEl) csvNameEl.textContent = `Atual: ${arquivo.name}`;
-                    }
-                } catch (error) {
-                    exibirMensagemFeedback(DOMElements.adminGlobalMessage, `Erro ao processar CSV: ${error.message}`, 'error', 4000);
-                }
-                event.target.value = ''; 
-            };
-            reader.onerror = function() {
-                exibirMensagemFeedback(DOMElements.adminGlobalMessage, 'Não foi possível ler o arquivo.', 'error', 4000);
-                event.target.value = ''; 
-            };
-            reader.readAsText(arquivo, 'UTF-8'); 
         }
 
-        function handleAdicionarUsuario(event) {
-            event.preventDefault();
-            const newUsername = DOMElements.newUsernameInput.value.trim();
-            const newPassword = DOMElements.newPasswordInput.value.trim();
-            exibirMensagemFeedback(DOMElements.adminAddUserMessage, ''); 
-
-            if (!newUsername || !newPassword) {
-                exibirMensagemFeedback(DOMElements.adminAddUserMessage, "Nome de usuário e senha são obrigatórios.", 'error');
-                return;
-            }
-            if (mockUsuarios.find(u => u.username === newUsername)) {
-                exibirMensagemFeedback(DOMElements.adminAddUserMessage, `O nome de usuário '${newUsername}' já existe.`, 'error');
-                return;
-            }
-            mockUsuarios.push({ username: newUsername, password: newPassword, role: 'user', assignedCSV: null });
-            exibirMensagemFeedback(DOMElements.adminAddUserMessage, `Usuário '${newUsername}' adicionado com sucesso!`, 'success', 3000);
-            DOMElements.formAdicionarUsuario.reset(); 
-            renderAdminPanel(); 
+        function criarUserCardAdmin(user) {
+            const card = document.createElement('div');
+            card.className = 'bg-gray-200 dark:bg-gray-700 p-4 rounded-lg shadow-md';
+            card.innerHTML = `
+                <div class="mb-3">
+                    <label class="block text-sm font-medium">Usuário:</label>
+                    <input type="text" id="edit-u-${user.username}" class="p-2 border rounded-md w-full text-sm" value="${user.username}">
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-medium">Senha:</label>
+                    <input type="text" id="edit-p-${user.username}" class="p-2 border rounded-md w-full text-sm" value="${user.password}">
+                </div>
+                <div class="flex space-x-2">
+                    <button class="bg-green-500 text-white py-1 px-3 rounded-md text-sm" onclick="saveUserChanges('${user.username}')">Salvar</button>
+                    <button class="bg-red-500 text-white py-1 px-3 rounded-md text-sm" onclick="handleRemoverUsuario('${user.username}')">Remover</button>
+                </div>
+            `;
+            return card;
         }
 
-        function handleRemoverUsuario(usernameToRemove) {
-            const userIndex = mockUsuarios.findIndex(user => user.username === usernameToRemove && user.role === 'user');
-            if (userIndex > -1) {
-                mockUsuarios.splice(userIndex, 1); 
-                exibirMensagemFeedback(DOMElements.adminGlobalMessage, `Usuário '${usernameToRemove}' removido com sucesso!`, 'success', 3000);
-                renderAdminPanel(); 
-            } else {
-                exibirMensagemFeedback(DOMElements.adminGlobalMessage, `Erro: Usuário '${usernameToRemove}' não encontrado ou não pode ser removido.`, 'error', 3000);
-            }
+        function saveUserChanges(original) {
+            const u = document.getElementById(`edit-u-${original}`).value.trim();
+            const p = document.getElementById(`edit-p-${original}`).value.trim();
+            const user = mockUsuarios.find(x => x.username === original);
+            if(user) { user.username = u; user.password = p; renderAdminPanel(); exibirMensagemFeedback(DOMElements.adminGlobalMessage, 'Alterado!', 'success', 2000); }
         }
 
-        function saveUserChanges(originalUsername, newUsernameValue, newPasswordValue) { 
-            const userToUpdate = mockUsuarios.find(u => u.username === originalUsername);
-            exibirMensagemFeedback(DOMElements.adminGlobalMessage, ''); 
-
-            const newUsername = newUsernameValue.trim();
-            const newPassword = newPasswordValue.trim();
-
-            if (!userToUpdate) {
-                exibirMensagemFeedback(DOMElements.adminGlobalMessage, `Erro: Usuário original '${originalUsername}' não encontrado.`, 'error', 4000);
-                return;
-            }
-
-            if (!newUsername) {
-                 exibirMensagemFeedback(DOMElements.adminGlobalMessage, `Erro: O novo nome de usuário para '${originalUsername}' não pode ser vazio.`, 'error', 4000);
-                return;
-            }
-            if (newUsername !== originalUsername && mockUsuarios.some(u => u.username === newUsername)) {
-                exibirMensagemFeedback(DOMElements.adminGlobalMessage, `Erro: O nome de usuário '${newUsername}' já está em uso.`, 'error', 4000);
-                return;
-            }
-            if (!newPassword) {
-                exibirMensagemFeedback(DOMElements.adminGlobalMessage, `Erro: A senha para '${newUsername}' não pode ser vazia.`, 'error', 4000);
-                return; 
-            }
-
-            userToUpdate.username = newUsername;
-            userToUpdate.password = newPassword;
-            
-            exibirMensagemFeedback(DOMElements.adminGlobalMessage, `Dados do usuário '${newUsername}' (anteriormente '${originalUsername}') atualizados!`, 'success', 3000);
-            renderAdminPanel(); 
+        function handleRemoverUsuario(u) {
+            const idx = mockUsuarios.findIndex(x => x.username === u);
+            if(idx !== -1) { mockUsuarios.splice(idx, 1); renderAdminPanel(); }
         }
 
+        function handleAdicionarUsuario(e) {
+            e.preventDefault();
+            const u = DOMElements.newUsernameInput.value.trim();
+            const p = DOMElements.newPasswordInput.value.trim();
+            if(!u || !p) return;
+            mockUsuarios.push({username: u, password: p, role: 'user', assignedCSV: null});
+            DOMElements.formAdicionarUsuario.reset(); renderAdminPanel();
+            exibirMensagemFeedback(DOMElements.adminAddUserMessage, 'Adicionado!', 'success', 2000);
+        }
 
-        // --- Funções do Visualizador de Dados ---
+        // --- Funções de Visualização e Tabela ---
         function popularSeletorDeColunas() {
             DOMElements.colunasVisiveisContainer.innerHTML = ''; 
-            if (csvHeaders.length === 0) {
-                colunasSelecionadas = [];
-                return;
-            }
-
-            csvHeaders.forEach(header => {
+            csvHeaders.forEach(h => {
                 const div = document.createElement('div');
                 div.className = 'flex items-center';
-                
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.id = `coluna-${header.replace(/\s+/g, '-')}`; 
-                checkbox.value = header;
-                checkbox.checked = colunasSelecionadas.includes(header); 
-                checkbox.className = 'mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600';
-
-                const label = document.createElement('label');
-                label.htmlFor = checkbox.id;
-                label.textContent = header;
-                label.className = 'text-sm text-gray-700 dark:text-gray-300 cursor-pointer';
-
-                checkbox.addEventListener('change', (event) => {
-                    if (event.target.checked) {
-                        if (!colunasSelecionadas.includes(header)) {
-                            colunasSelecionadas.push(header);
-                        }
-                    } else {
-                        colunasSelecionadas = colunasSelecionadas.filter(col => col !== header);
-                    }
+                const cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = h; cb.checked = colunasSelecionadas.includes(h); cb.className = 'mr-2';
+                cb.onchange = (e) => {
+                    if (e.target.checked) colunasSelecionadas.push(h);
+                    else colunasSelecionadas = colunasSelecionadas.filter(c => c !== h);
                     aplicarFiltro(); 
-                });
-
-                div.appendChild(checkbox);
-                div.appendChild(label);
+                };
+                const lb = document.createElement('label'); lb.textContent = h;
+                div.append(cb, lb);
                 DOMElements.colunasVisiveisContainer.appendChild(div);
             });
         }
 
         function popularFiltroColuna() {
             DOMElements.filtroColunaSelect.innerHTML = '<option value="">Selecione uma coluna</option>'; 
-            if (csvHeaders.length === 0) {
-                DOMElements.filtroColunaSelect.disabled = true;
-                DOMElements.filtroPesquisaInput.disabled = true; 
-                return;
-            }
-            DOMElements.filtroColunaSelect.disabled = false;
-            csvHeaders.forEach(header => {
-                const option = document.createElement('option');
-                option.value = header;
-                option.textContent = header;
-                DOMElements.filtroColunaSelect.appendChild(option);
+            csvHeaders.forEach(h => {
+                const opt = document.createElement('option'); opt.value = h; opt.textContent = h;
+                DOMElements.filtroColunaSelect.appendChild(opt);
             });
-            atualizarEstadoCampoPesquisa();
-        }
-        
-        function atualizarEstadoCampoPesquisa() {
-            const colunaSelecionada = DOMElements.filtroColunaSelect.value;
-            currentPage = 1; 
-            if (colunaSelecionada) {
-                DOMElements.filtroPesquisaInput.disabled = false;
-            } else {
-                DOMElements.filtroPesquisaInput.disabled = true;
-                DOMElements.filtroPesquisaInput.value = ''; 
-            }
-            aplicarFiltro(); 
+            DOMElements.filtroPesquisaInput.disabled = !DOMElements.filtroColunaSelect.value;
         }
 
-        function renderizarTabela(pessoas) {
-            DOMElements.tabelaCabecalho.innerHTML = ''; 
-            DOMElements.tabelaCorpo.innerHTML = '';    
-            const headersParaRenderizar = colunasSelecionadas;
-
-            if (headersParaRenderizar.length === 0) {
-                 exibirMensagemFeedback(DOMElements.mensagemSemDados, ''); 
-                 DOMElements.tabelaCabecalho.classList.add('hidden');
-                 DOMElements.tabelaCorpo.classList.add('hidden');
-                 atualizarContagemPessoasExibidas(0);
-                 return;
+        function renderizarTabela(dados) {
+            DOMElements.tabelaCabecalho.innerHTML = ''; DOMElements.tabelaCorpo.innerHTML = '';
+            if (colunasSelecionadas.length === 0) {
+                 exibirMensagemFeedback(DOMElements.mensagemSemDados, 'Selecione colunas.'); 
+                 DOMElements.tabelaCabecalho.classList.add('hidden'); DOMElements.tabelaCorpo.classList.add('hidden');
+                 atualizarContagemPessoasExibidas(0); return;
             }
-            
-            DOMElements.tabelaCabecalho.classList.remove('hidden');
-            const trHeader = document.createElement('tr');
-            headersParaRenderizar.forEach(headerText => {
+            exibirMensagemFeedback(DOMElements.mensagemSemDados, ''); 
+            DOMElements.tabelaCabecalho.classList.remove('hidden'); DOMElements.tabelaCorpo.classList.remove('hidden');
+
+            const trH = document.createElement('tr');
+            colunasSelecionadas.forEach(h => {
                 const th = document.createElement('th');
-                th.scope = "col";
-                th.className = "px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider";
-                th.textContent = headerText;
-                trHeader.appendChild(th);
+                th.className = "px-4 py-2 text-left text-xs font-bold uppercase bg-gray-50 dark:bg-gray-700";
+                th.textContent = h; trH.appendChild(th);
             });
-            DOMElements.tabelaCabecalho.appendChild(trHeader);
+            DOMElements.tabelaCabecalho.appendChild(trH);
             
-            const startIndex = (currentPage - 1) * rowsPerPage;
-            const endIndex = startIndex + rowsPerPage;
-            const itensPaginados = pessoas.slice(startIndex, endIndex);
+            const start = (currentPage - 1) * rowsPerPage;
+            const paginated = dados.slice(start, start + rowsPerPage);
 
-            if (pessoas.length === 0) { 
-                exibirMensagemFeedback(DOMElements.mensagemSemDados, ''); 
-                DOMElements.tabelaCorpo.classList.add('hidden');
+            if (dados.length === 0) { 
+                DOMElements.tabelaCorpo.innerHTML = '<tr><td colspan="100%" class="p-4 text-center">Vazio.</td></tr>';
             } else {
-                exibirMensagemFeedback(DOMElements.mensagemSemDados, ''); 
-                DOMElements.tabelaCorpo.classList.remove('hidden');
-                itensPaginados.forEach(pessoa => {
+                paginated.forEach(p => {
                     const tr = document.createElement('tr');
-                    tr.className = "hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150";
-                    headersParaRenderizar.forEach(header => { 
-                        const td = document.createElement('td');
-                        td.className = "px-4 py-3 whitespace-nowrap text-sm";
-                        if (header.toLowerCase() === headersParaRenderizar[0].toLowerCase()) { 
-                             td.classList.add("font-medium", "text-gray-900", "dark:text-gray-100");
-                        } else {
-                             td.classList.add("text-gray-700", "dark:text-gray-300");
-                        }
-                        td.textContent = pessoa[header] !== undefined ? pessoa[header] : ''; 
-                        tr.appendChild(td);
+                    tr.className = "hover:bg-gray-100 dark:hover:bg-gray-800 transition border-b dark:border-gray-700";
+                    colunasSelecionadas.forEach(c => {
+                        const td = document.createElement('td'); td.className = "px-4 py-2 text-sm";
+                        td.textContent = p[c] || ''; tr.appendChild(td);
                     });
                     DOMElements.tabelaCorpo.appendChild(tr);
                 });
             }
-            atualizarContagemPessoasExibidas(pessoas.length);
+            atualizarContagemPessoasExibidas(dados.length);
+            renderizarPaginacao(dados.length);
         }
 
-        function renderizarPaginacao(totalItems) {
+        function renderizarPaginacao(total) {
             DOMElements.paginacaoContainer.innerHTML = '';
-            const totalPages = Math.ceil(totalItems / rowsPerPage);
-
+            const totalPages = Math.ceil(total / rowsPerPage);
             if (totalPages <= 1) return;
 
-            const pagesToShow = new Set();
-            pagesToShow.add(1);
-            pagesToShow.add(totalPages);
-            for (let i = -1; i <= 1; i++) {
-                const page = currentPage + i;
-                if (page > 1 && page < totalPages) {
-                    pagesToShow.add(page);
-                }
-            }
-            
-            const sortedPages = Array.from(pagesToShow).sort((a, b) => a - b);
+            const pages = new Set([1, totalPages, currentPage, currentPage - 1, currentPage + 1]);
+            const sortedPages = Array.from(pages).filter(p => p >= 1 && p <= totalPages).sort((a, b) => a - b);
 
-            let lastPageRendered = 0;
-            sortedPages.forEach(page => {
-                if (page > lastPageRendered + 1) {
-                    const ellipsis = document.createElement('span');
-                    ellipsis.textContent = '...';
-                    ellipsis.className = 'pagination-ellipsis';
-                    DOMElements.paginacaoContainer.appendChild(ellipsis);
+            let last = 0;
+            sortedPages.forEach(p => {
+                if (last && p - last > 1) {
+                    const span = document.createElement('span'); span.textContent = '...'; DOMElements.paginacaoContainer.appendChild(span);
                 }
-
-                const button = document.createElement('button');
-                button.textContent = page;
-                button.className = 'pagination-btn';
-                if (page === currentPage) {
-                    button.classList.add('active');
-                }
-                button.addEventListener('click', () => {
-                    currentPage = page;
-                    aplicarFiltro();
-                });
-                DOMElements.paginacaoContainer.appendChild(button);
-                lastPageRendered = page;
+                const btn = document.createElement('button');
+                btn.textContent = p; btn.className = `pagination-btn ${p === currentPage ? 'active' : ''}`;
+                btn.onclick = () => { currentPage = p; aplicarFiltro(); };
+                DOMElements.paginacaoContainer.appendChild(btn);
+                last = p;
             });
+            
+            const input = document.createElement('input');
+            input.type = 'number'; input.placeholder = 'Pág...'; input.className = 'w-16 p-1 border rounded text-center dark:bg-gray-800';
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    const v = parseInt(e.target.value);
+                    if (v >= 1 && v <= totalPages) { currentPage = v; aplicarFiltro(); }
+                }
+            };
+            DOMElements.paginacaoContainer.appendChild(input);
         }
 
-
         function atualizarContagemTotalBase() {
-            DOMElements.totalBase.textContent = dadosPessoas.length;
+            if (DOMElements.totalBase) {
+                DOMElements.totalBase.textContent = dadosPessoas.length;
+            }
         }
 
         function atualizarContagemPessoasExibidas(count) {
-            DOMElements.pessoasExibidas.textContent = count;
+            if (DOMElements.pessoasExibidas) {
+                DOMElements.pessoasExibidas.textContent = count;
+            }
         }
 
         function aplicarFiltro() {
-            const colunaFiltrar = DOMElements.filtroColunaSelect.value;
-            const termoPesquisa = DOMElements.filtroPesquisaInput.value.toLowerCase().trim();
-            let dadosFiltrados = dadosPessoas;
-
-            if (dadosPessoas.length === 0) {
-                renderizarTabela([]); 
-                renderizarPaginacao(0);
-                return;
+            const col = DOMElements.filtroColunaSelect.value;
+            const search = DOMElements.filtroPesquisaInput.value.toLowerCase().trim();
+            let res = dadosPessoas;
+            if (col && search) {
+                res = dadosPessoas.filter(p => String(p[col] || '').toLowerCase().includes(search));
             }
+            dadosFiltradosAtuais = res; 
+            renderizarTabela(res);
+        }
 
-            if (colunaFiltrar && termoPesquisa) {
-                dadosFiltrados = dadosPessoas.filter(pessoa => {
-                    const valorColuna = pessoa[colunaFiltrar];
-                    if (valorColuna !== undefined && valorColuna !== null) {
-                        return String(valorColuna).toLowerCase().includes(termoPesquisa);
-                    }
-                    return false; 
-                });
-            }
-            renderizarTabela(dadosFiltrados);
-            renderizarPaginacao(dadosFiltrados.length);
+        function exportarDadosParaCSV() {
+            if (dadosFiltradosAtuais.length === 0 || colunasSelecionadas.length === 0) return;
+            let csv = colunasSelecionadas.join(',') + '\n';
+            dadosFiltradosAtuais.forEach(p => {
+                csv += colunasSelecionadas.map(c => {
+                    let v = String(p[c] || '');
+                    return v.includes(',') ? `"${v}"` : v;
+                }).join(',') + '\n';
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'export.csv'; a.click();
         }
 
         function processarCSVManualmente(event) { 
-            const arquivo = event.target.files[0];
-            exibirMensagemFeedback(DOMElements.mensagemUploadCSV, ''); 
-            
-            if (!arquivo) {
-                exibirMensagemFeedback(DOMElements.mensagemUploadCSV, 'Nenhum arquivo selecionado.', 'warning');
-                return;
-            }
-            if (arquivo.type !== 'text/csv' && !arquivo.name.endsWith('.csv')) {
-                 exibirMensagemFeedback(DOMElements.mensagemUploadCSV, 'Formato de arquivo inválido. Por favor, selecione um arquivo .csv.', 'error');
-                 return;
-            }
-            const reader = new FileReader();
-            reader.onload = function(e) {
+            const f = event.target.files[0]; if (!f) return;
+            const r = new FileReader();
+            r.onload = (e) => {
                 try {
-                    const {headers: localCsvHeaders, data: localDadosPessoas} = parseCSVContent(e.target.result);
-                    csvHeaders = localCsvHeaders;
-                    dadosPessoas = localDadosPessoas;
-                    colunasSelecionadas = [...csvHeaders]; 
-                    currentPage = 1;
-                    popularSeletorDeColunas(); 
-                    
-                    exibirMensagemFeedback(DOMElements.mensagemUploadCSV, `Arquivo "${arquivo.name}" carregado com ${dadosPessoas.length} registros.`, 'success', 4000);
+                    const parsed = parseCSVContent(e.target.result);
+                    csvHeaders = parsed.headers; dadosPessoas = parsed.data;
+                    colunasSelecionadas = [...csvHeaders]; popularSeletorDeColunas();
                     atualizarContagemTotalBase();
-                    popularFiltroColuna(); 
-                } catch (error) {
-                    console.error("Erro ao processar CSV:", error);
-                    exibirMensagemFeedback(DOMElements.mensagemUploadCSV, `Erro ao ler o arquivo CSV: ${error.message}`, 'error');
-                    resetVisualizadorState(); 
-                }
+                    popularFiltroColuna(); aplicarFiltro();
+                    exibirMensagemFeedback(DOMElements.mensagemUploadCSV, 'CSV OK!', 'success', 2000);
+                } catch (err) { exibirMensagemFeedback(DOMElements.mensagemUploadCSV, 'Erro CSV.', 'error'); }
             };
-            reader.onerror = function() {
-                exibirMensagemFeedback(DOMElements.mensagemUploadCSV, 'Não foi possível ler o arquivo.', 'error');
-            };
-            reader.readAsText(arquivo, 'UTF-8'); 
+            r.readAsText(f); 
         }
 
-        // --- Inicialização e Event Listeners ---
+        // --- Inicialização ---
         document.addEventListener('DOMContentLoaded', () => {
-            DOMElements.formLogin.addEventListener('submit', tentarLogin);
-            
-            DOMElements.botoesLogout.forEach(btn => btn.addEventListener('click', fazerLogout));
-            
-            if(DOMElements.formAdicionarUsuario) { 
-                DOMElements.formAdicionarUsuario.addEventListener('submit', handleAdicionarUsuario);
-            }
-
-            if (DOMElements.recentUpdateBtn) {
-                DOMElements.recentUpdateBtn.addEventListener('click', () => {
-                    DOMElements.updateModal.classList.remove('hidden');
-                });
-            }
-             if (DOMElements.closeUpdateModalBtn) {
-                DOMElements.closeUpdateModalBtn.addEventListener('click', () => {
-                    DOMElements.updateModal.classList.add('hidden');
-                });
-            }
-            if (DOMElements.okUpdateModalBtn) {
-                DOMElements.okUpdateModalBtn.addEventListener('click', () => {
-                    DOMElements.updateModal.classList.add('hidden');
-                });
-            }
-
-            DOMElements.botaoCarregarCSV.addEventListener('click', () => {
-                if (DOMElements.arquivoCSVInput.files.length > 0) {
-                    processarCSVManualmente({ target: DOMElements.arquivoCSVInput });
-                } else {
-                    exibirMensagemFeedback(DOMElements.mensagemUploadCSV, 'Por favor, selecione um arquivo CSV primeiro.', 'warning');
-                }
-            });
-            DOMElements.filtroColunaSelect.addEventListener('change', atualizarEstadoCampoPesquisa);
-            DOMElements.filtroPesquisaInput.addEventListener('input', () => {
-                currentPage = 1; 
+            DOMElements.formLogin.onsubmit = tentarLogin;
+            DOMElements.botoesLogout.forEach(btn => btn.onclick = fazerLogout);
+            DOMElements.recentUpdateBtn.onclick = () => DOMElements.updateModal.classList.remove('hidden');
+            DOMElements.closeUpdateModalBtn.onclick = DOMElements.okUpdateModalBtn.onclick = () => DOMElements.updateModal.classList.add('hidden');
+            DOMElements.closeWelcomeNotificationBtn.onclick = () => {
+                DOMElements.welcomeNotification.classList.remove('show');
+                setTimeout(() => DOMElements.welcomeNotification.classList.add('hidden'), 500);
+            };
+            DOMElements.uploadHeader.onclick = () => {
+                DOMElements.uploadContent.classList.toggle('hidden');
+                DOMElements.toggleUploadIcon.classList.toggle('rotate-180');
+            };
+            DOMElements.colunasVisiveisHeader.onclick = () => {
+                DOMElements.colunasVisiveisContainer.classList.toggle('hidden');
+                DOMElements.toggleColunasIcon.classList.toggle('rotate-180');
+            };
+            DOMElements.botaoCarregarCSV.onclick = () => processarCSVManualmente({ target: DOMElements.arquivoCSVInput });
+            DOMElements.filtroColunaSelect.onchange = () => {
+                DOMElements.filtroPesquisaInput.disabled = !DOMElements.filtroColunaSelect.value;
                 aplicarFiltro();
-            }); 
-            
-            if(DOMElements.uploadHeader) {
-                DOMElements.uploadHeader.addEventListener('click', () => {
-                    DOMElements.uploadContent.classList.toggle('hidden');
-                    DOMElements.toggleUploadIcon.classList.toggle('rotate-180');
-                });
-            }
-            
-            if(DOMElements.colunasVisiveisHeader) {
-                 DOMElements.colunasVisiveisHeader.addEventListener('click', () => {
-                    DOMElements.colunasVisiveisContainer.classList.toggle('hidden');
-                    DOMElements.toggleColunasIcon.classList.toggle('rotate-180');
-                });
-            }
-            
-            if(DOMElements.closeWelcomeNotificationBtn) {
-                DOMElements.closeWelcomeNotificationBtn.addEventListener('click', () => {
-                    clearTimeout(welcomeTimeout);
-                    DOMElements.welcomeNotification.classList.remove('show');
-                    setTimeout(() => DOMElements.welcomeNotification.classList.add('hidden'), 500);
-                });
-            }
+            };
+            DOMElements.filtroPesquisaInput.oninput = aplicarFiltro;
+            DOMElements.botaoExportarCSV.onclick = exportarDadosParaCSV;
+            DOMElements.formAdicionarUsuario.onsubmit = handleAdicionarUsuario;
 
-            DOMElements.telaAdmin.classList.add('hidden');
-            DOMElements.conteudoPrincipal.classList.add('hidden');
+            DOMElements.botaoVisualizar.onclick = () => {
+                DOMElements.telaAdmin.classList.add('hidden');
+                DOMElements.conteudoPrincipal.classList.remove('hidden');
+                setupUserView();
+            };
+            DOMElements.botaoVoltarAdmin.onclick = () => {
+                DOMElements.conteudoPrincipal.classList.add('hidden');
+                DOMElements.telaAdmin.classList.remove('hidden');
+                renderAdminPanel();
+            };
+
             resetVisualizadorState();
         });
     </script>
