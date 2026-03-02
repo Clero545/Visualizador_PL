@@ -3,734 +3,438 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualizador de Base de Dados - Gestão e Visualização Personalizada</title>
+    <title>Visualizador de Base de Dados - Cloud Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .container-app, .container-admin { 
-            max-width: 1200px; margin: 2rem auto; padding: 1rem;
-        }
-        .container-admin-login-form { 
-            max-width: 400px; 
-            margin-left: auto;
-            margin-right: auto;
-            display: flex;
-            flex-direction: column;
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            padding: 1rem; 
-        }
-        @media (prefers-color-scheme: dark) {
-            select, input[type="text"], input[type="password"], input[type="file"]::file-selector-button, input[type="checkbox"], input[type="number"] {
-                background-color: #374151; color: #f3f4f6; border-color: #4b5563;
-            }
-            input[type="checkbox"] { accent-color: #3b82f6; }
-            select option { background-color: #374151; color: #f3f4f6; }
-            input[type="file"]::file-selector-button {
-                padding: 0.5rem 1rem; border-radius: 0.375rem; transition: background-color 0.2s;
-            }
-            input[type="file"]::file-selector-button:hover { background-color: #4b5563; }
-        }
-        input[type="file"] { border: 1px solid; border-radius: 0.375rem; padding: 0.25rem; }
-        input[type="text"], input[type="password"], input[type="number"] {
-             border: 1px solid #D1D5DB; padding: 0.5rem; border-radius: 0.375rem;
-             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); width: 100%;
-        }
-        input[type="number"] { width: 6.5rem; text-align: center; } 
-        input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus {
-            outline: 2px solid transparent; outline-offset: 2px; border-color: #2563EB;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
-        }
-        .table-container { overflow-x: auto; }
+        .container-app, .container-admin { max-width: 1200px; margin: 2rem auto; padding: 1rem; }
+        .container-admin-login-form { max-width: 400px; margin: auto; display: flex; flex-direction: column; justify-content: center; min-height: 100vh; padding: 1rem; }
         .hidden { display: none !important; }
-        .feedback-success { color: #16a34a; }
-        .feedback-error { color: #dc2626; }
-        .feedback-warning { color: #f59e0b; }
+        input, select { border: 1px solid #D1D5DB; padding: 0.5rem; border-radius: 0.375rem; width: 100%; }
+        input:focus, select:focus { outline: 2px solid transparent; border-color: #2563EB; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
+        .pagination-btn { padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; transition: all 0.2s; }
+        .pagination-btn.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
+        .colunas-visiveis-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.5rem; max-height: 150px; overflow-y: auto; padding: 0.5rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; }
         @media (prefers-color-scheme: dark) {
-            .feedback-success { color: #4ade80; }
-            .feedback-error { color: #f87171; }
-            .feedback-warning { color: #facc15; }
-        }
-        .colunas-visiveis-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 0.5rem;
-            max-height: 150px;
-            overflow-y: auto;
-            padding: 0.5rem;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.375rem;
-        }
-        .colunas-visiveis-container label {
-            display: flex;
-            align-items: center;
-            font-size: 0.875rem;
-            cursor: pointer;
-        }
-         .colunas-visiveis-container input[type="checkbox"] {
-            margin-right: 0.5rem;
-            height: 1rem;
-            width: 1rem;
-        }
-        .toggle-arrow {
-            transition: transform 0.3s ease;
-        }
-        .pagination-btn {
-            padding: 0.5rem 0.75rem;
-            min-width: 2.25rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-            transition: background-color 0.2s, color 0.2s;
-        }
-        .pagination-btn:hover {
-            background-color: #f3f4f6;
-        }
-        .pagination-btn.active {
-            background-color: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-        }
-        .pagination-ellipsis {
-            display: flex;
-            align-items: center;
-            padding: 0.5rem 0.25rem;
-        }
-        @media (prefers-color-scheme: dark) {
-            .pagination-btn {
-                 border-color: #4b5563;
-            }
-             .pagination-btn:hover {
-                background-color: #374151;
-            }
-            .pagination-btn.active {
-                background-color: #60a5fa;
-                border-color: #60a5fa;
-            }
-        }
-        #welcomeNotification.show {
-            transform: translateX(0);
-            opacity: 1;
+            body { background-color: #111827; color: #f3f4f6; }
+            .bg-white { background-color: #1f2937; }
+            input, select { background-color: #374151; color: #f3f4f6; border-color: #4b5563; }
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
 
-    <div id="welcomeNotification" class="hidden fixed top-5 left-5 bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg flex items-center space-x-4 transition-transform transform -translate-x-full opacity-0 duration-500 z-50">
-        <span id="welcomeNotificationText" class="text-lg font-medium"></span>
-        <button id="closeWelcomeNotificationBtn" class="text-2xl font-bold leading-none hover:text-gray-200 p-1">&times;</button>
+    <!-- NOTIFICAÇÃO DE BOAS-VINDAS -->
+    <div id="welcomeNotification" class="hidden fixed top-5 left-5 bg-blue-500 text-white py-4 px-6 rounded-lg shadow-lg z-50 transition-all duration-500">
+        <span id="welcomeNotificationText"></span>
     </div>
 
-    <div id="updateModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg mx-4 border border-gray-200 dark:border-gray-700">
-            <div class="flex justify-between items-center border-b pb-3 dark:border-gray-600">
-                <h3 class="text-xl font-bold">Atualizações Recentes - 13/06/2025</h3>
-                <button id="closeUpdateModalBtn" class="text-gray-500 text-2xl leading-none hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">&times;</button>
-            </div>
-            <div class="mt-4">
-                <ul class="list-disc list-inside mt-2 space-y-3 text-gray-600 dark:text-gray-400">
-                    <li><strong class="text-gray-800 dark:text-gray-200">Exportação de Dados:</strong> Baixe um arquivo CSV contendo exatamente o que está vendo na tela.</li>
-                    <li><strong class="text-gray-800 dark:text-gray-200">Login Facilitado:</strong> Entre com seu usuário sem se preocupar com letras maiúsculas ou minúsculas.</li>
-                    <li><strong class="text-gray-800 dark:text-gray-200">Visualização Admin:</strong> Agora o administrador pode alternar entre a gestão e a visualização do site.</li>
-                </ul>
-            </div>
-            <div class="mt-6 text-right">
-                <button id="okUpdateModalBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-md">
-                    Entendido
-                </button>
-            </div>
-        </div>
-    </div>
-
+    <!-- TELA LOGIN -->
     <div id="telaLogin" class="container-admin-login-form">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full"> 
-            <h1 class="text-2xl font-bold text-center text-blue-600 dark:text-blue-400 mb-6">Acesso ao Sistema</h1>
-            <form id="formLogin">
-                <div class="mb-4">
-                    <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Usuário:</label>
-                    <input type="text" id="username" name="username" required>
+            <h1 class="text-2xl font-bold text-center text-blue-600 mb-6">Acesso ao Sistema</h1>
+            <form id="formLogin" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Usuário:</label>
+                    <input type="text" id="username" required>
                 </div>
-                <div class="mb-6">
-                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Senha:</label>
-                    <input type="password" id="password" name="password" required>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Senha:</label>
+                    <input type="password" id="password" required>
                 </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">
-                    Entrar
-                </button>
-                <p id="mensagemLogin" class="mt-4 text-sm text-center font-semibold"></p> 
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded-md hover:bg-blue-700 transition">Entrar</button>
             </form>
+            <div class="mt-6 relative text-center">
+                <hr class="border-gray-300 dark:border-gray-600">
+                <span class="absolute top-[-10px] left-1/2 translate-x-[-50%] bg-white dark:bg-gray-800 px-2 text-sm text-gray-500">ou</span>
+            </div>
+            <button id="btnGoogleLogin" class="mt-6 w-full flex items-center justify-center bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 py-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-2">
+                Entrar com Google
+            </button>
+            <p id="mensagemLogin" class="mt-4 text-sm text-center font-semibold"></p>
         </div>
     </div>
-     
-    <button id="recentUpdateBtn" class="fixed bottom-5 left-5 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-lg z-40 transition-colors duration-200">
-        Atualização Recente
-    </button>
 
-
+    <!-- TELA ADMIN -->
     <div id="telaAdmin" class="container-admin hidden">
-        <header class="mb-8">
-            <div class="flex justify-between items-center mb-2">
-                <h1 class="text-3xl md:text-4xl font-bold text-green-600 dark:text-green-400">Painel do Administrador</h1>
-                <div class="flex space-x-2">
-                    <button id="botaoVisualizar" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-3 rounded-md shadow-md text-sm transition duration-150 ease-in-out">
-                        Visualizar
-                    </button>
-                    <button class="logout-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-3 rounded-md shadow-md text-sm transition duration-150 ease-in-out">
-                        Sair
-                    </button>
-                </div>
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-green-600">Gestão de Usuários</h1>
+            <div class="flex space-x-2">
+                <button id="botaoVisualizar" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Visualizar</button>
+                <button class="logout-btn bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Sair</button>
             </div>
-            <p class="text-md text-gray-600 dark:text-gray-400">Gerenciar usuários e informações de acesso.</p>
-            <p id="adminGlobalMessage" class="mt-2 text-sm font-semibold"></p>
         </header>
-
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
-            <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200 border-b pb-2 border-gray-300 dark:border-gray-600">Adicionar Novo Usuário</h2>
-            <form id="formAdicionarUsuario">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label for="newUsername" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome do Usuário:</label>
-                        <input type="text" id="newUsername" class="p-2 border border-gray-300 dark:border-gray-600 rounded-md w-full text-sm" required>
-                    </div>
-                    <div>
-                        <label for="newPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Senha:</label>
-                        <input type="password" id="newPassword" class="p-2 border border-gray-300 dark:border-gray-600 rounded-md w-full text-sm" required>
-                    </div>
-                </div>
-                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md text-sm transition duration-150 ease-in-out">
-                    Adicionar Usuário
-                </button>
-                <p id="adminAddUserMessage" class="mt-3 text-sm font-semibold"></p>
+        
+        <div class="bg-white dark:bg-gray-800 p-6 rounded shadow mb-8">
+            <h2 class="text-xl font-bold mb-4">Adicionar Novo Usuário</h2>
+            <form id="formAdicionarUsuario" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input type="text" id="newUsername" placeholder="Nome" required>
+                <input type="password" id="newPassword" placeholder="Senha" required>
+                <button type="submit" class="bg-green-600 text-white rounded py-2 hover:bg-green-700">Criar Usuário</button>
             </form>
+            <p id="adminAddUserMessage" class="mt-2 text-sm"></p>
         </div>
 
-        <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200 border-b pb-2 border-gray-300 dark:border-gray-600 mt-8">Gerenciar Usuários Existentes</h2>
-        <div id="listaUsuariosAdmin" class="space-y-6">
-        </div>
+        <div id="listaUsuariosAdmin" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </div>
 
-
-    <div id="conteudoPrincipal" class="container-app hidden"> 
-        <header class="mb-8">
-            <div class="relative flex justify-center items-center py-2">
-                <h1 class="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400 text-center">Visualizador de Base de Dados</h1>
-                <div class="absolute right-0 flex flex-col items-center">
-                    <span id="loggedInUserName" class="block text-md font-medium text-gray-700 dark:text-gray-200 mb-1"></span>
-                    <div class="flex space-x-2">
-                        <button id="botaoVoltarAdmin" class="hidden bg-blue-500 hover:bg-blue-600 text-white font-semibold py-1 px-3 rounded-md shadow-md text-sm transition duration-150 ease-in-out">
-                            Gerenciar
-                        </button>
-                        <button class="logout-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded-md shadow-md text-sm transition duration-150 ease-in-out">
-                            Sair
-                        </button>
-                    </div>
-                </div>
+    <!-- CONTEÚDO PRINCIPAL (USUÁRIO) -->
+    <div id="conteudoPrincipal" class="container-app hidden">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold text-blue-600">Visualizador de Dados</h1>
+            <div class="flex items-center space-x-4">
+                <span id="loggedInUserName" class="font-medium"></span>
+                <button id="botaoVoltarAdmin" class="hidden bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600">Painel Admin</button>
+                <button class="logout-btn bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">Sair</button>
             </div>
-            <p id="mensagemCSVInfo" class="text-md text-gray-600 dark:text-gray-400 mt-4 text-center"></p>
         </header>
 
-        <div id="uploadManualSection" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
-            <div class="flex justify-between items-center cursor-pointer" id="uploadHeader">
-                <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">Carregar Base de Dados (CSV)</h2>
-                <button id="toggleUploadBtn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-                    <svg id="toggleUploadIcon" class="w-6 h-6 text-gray-600 dark:text-gray-400 toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                </button>
-            </div>
-            <div id="uploadContent" class="mt-4">
-                <div class="mb-4">
-                    <label for="arquivoCSV" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Selecione um arquivo CSV:</label>
-                    <input type="file" id="arquivoCSV" accept=".csv" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm text-gray-700 dark:text-gray-300
-                                    file:mr-4 file:py-2 file:px-4
-                                    file:rounded-md file:border-0
-                                    file:text-sm file:font-semibold
-                                    file:bg-blue-50 dark:file:bg-blue-800 file:text-blue-700 dark:file:text-blue-300
-                                    hover:file:bg-blue-100 dark:hover:file:bg-blue-700 cursor-pointer">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded shadow-lg mb-6">
+            <div id="uploadSection" class="mb-6 border-b dark:border-gray-700 pb-6">
+                <h2 class="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-200">Carregar CSV</h2>
+                <div class="flex flex-col md:flex-row gap-4">
+                    <input type="file" id="arquivoCSV" accept=".csv" class="cursor-pointer">
+                    <button id="botaoCarregarCSV" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">Processar</button>
                 </div>
-                <button id="botaoCarregarCSV" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">
-                    Carregar Dados do CSV
-                </button>
-                <p id="mensagemUploadCSV" class="mt-3 text-sm font-semibold"></p> 
+                <p id="mensagemUploadCSV" class="mt-2 text-sm"></p>
             </div>
-        </div>
 
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 items-end">
                 <div>
-                    <label for="filtroColunaSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">1. Filtrar por Coluna:</label>
-                    <select id="filtroColunaSelect" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100">
-                        <option value="">Selecione uma coluna</option>
+                    <label class="block text-sm font-medium mb-1">Filtrar por Coluna:</label>
+                    <select id="filtroColunaSelect">
+                        <option value="">Selecione...</option>
                     </select>
                 </div>
                 <div>
-                    <label for="filtroPesquisaInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">2. Pesquisar na Coluna:</label>
-                    <input type="text" id="filtroPesquisaInput" class="w-full" placeholder="Digite para pesquisar..." disabled>
+                    <label class="block text-sm font-medium mb-1">Pesquisar:</label>
+                    <input type="text" id="filtroPesquisaInput" placeholder="Digite para filtrar..." disabled>
                 </div>
             </div>
+
             <div class="mb-6">
-                <div class="flex justify-between items-center cursor-pointer" id="colunasVisiveisHeader">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Colunas Visíveis na Tabela:</label>
-                    <button id="toggleColunasBtn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-                         <svg id="toggleColunasIcon" class="w-6 h-6 text-gray-600 dark:text-gray-400 toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                </div>
-                <div id="colunasVisiveisContainer" class="colunas-visiveis-container bg-gray-50 dark:bg-gray-700/50 mt-2">
-                    </div>
+                <label class="block text-sm font-medium mb-2">Colunas Visíveis:</label>
+                <div id="colunasVisiveisContainer" class="colunas-visiveis-container bg-gray-50 dark:bg-gray-700"></div>
             </div>
-             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-                 <div class="bg-blue-50 dark:bg-blue-900/40 p-4 rounded-md text-center">
-                    <h2 class="text-lg font-semibold text-blue-700 dark:text-blue-300">Total de Registros</h2>
-                    <p id="totalBase" class="text-2xl font-bold text-blue-600 dark:text-blue-400">0</p>
+
+            <div class="flex justify-between items-center bg-blue-50 dark:bg-blue-900/30 p-4 rounded-md mb-6">
+                <div class="text-center flex-1 border-r dark:border-gray-700">
+                    <p class="text-sm opacity-70">Total Registros</p>
+                    <p id="totalBase" class="text-2xl font-bold">0</p>
                 </div>
-                <div class="bg-green-50 dark:bg-green-900/40 p-4 rounded-md text-center">
-                    <h2 class="text-lg font-semibold text-green-700 dark:text-green-300">Registros Exibidos</h2>
-                    <p id="pessoasExibidas" class="text-2xl font-bold text-green-600 dark:text-green-400">0</p>
+                <div class="text-center flex-1">
+                    <p class="text-sm opacity-70">Filtrados</p>
+                    <p id="pessoasExibidas" class="text-2xl font-bold">0</p>
                 </div>
             </div>
-            <div class="flex justify-center sm:justify-end">
-                <button id="botaoExportarCSV" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-md shadow-md transition duration-150 ease-in-out flex items-center space-x-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    <span>Exportar Dados Filtrados (CSV)</span>
+
+            <div class="flex justify-end">
+                <button id="botaoExportarCSV" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-md shadow-md transition flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Exportar Seleção
                 </button>
             </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-lg table-container">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead id="tabelaCabecalho" class="bg-gray-50 dark:bg-gray-700"></thead>
-                <tbody id="tabelaCorpo" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"></tbody>
-            </table>
-            <div id="paginacaoContainer" class="flex flex-wrap justify-center items-center mt-6 gap-2"></div>
-            <div id="mensagemSemDados" class="text-center py-8 text-gray-500 dark:text-gray-400 hidden"></div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead id="tabelaCabecalho" class="bg-gray-50 dark:bg-gray-700"></thead>
+                    <tbody id="tabelaCorpo" class="divide-y dark:divide-gray-700"></tbody>
+                </table>
+            </div>
+            <div id="paginacaoContainer" class="p-4 flex flex-wrap justify-center items-center gap-2 border-t dark:border-gray-700"></div>
         </div>
-        <footer class="text-center mt-12 py-4 border-t border-gray-200 dark:border-gray-700">
-            <p class="text-sm text-gray-500 dark:text-gray-400">&copy; <span id="currentYear"></span> Seu Aplicativo de Dados. Todos os direitos reservados.</p>
-        </footer>
     </div>
 
-    <script>
-        // --- Estado da Aplicação ---
-        let dadosPessoas = [];
-        let dadosFiltradosAtuais = [];
-        let csvHeaders = []; 
-        let colunasSelecionadas = []; 
-        let currentUser = null;
-        let mockUsuarios = [
-            { username: "admin", password: "090820", role: "admin", assignedCSV: null },
-            { username: "Davi", password: "Izalci@22", role: "user", assignedCSV: null },
-            { username: "Jader", password: "275948", role: "user", assignedCSV: null }
-        ];
-        let currentPage = 1;
-        const rowsPerPage = 25;
-        let welcomeTimeout;
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, updateDoc, deleteDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Seletores de DOM ---
-        const DOMElements = {
-            telaLogin: document.getElementById('telaLogin'),
-            telaAdmin: document.getElementById('telaAdmin'),
-            conteudoPrincipal: document.getElementById('conteudoPrincipal'),
-            formLogin: document.getElementById('formLogin'),
-            usernameInput: document.getElementById('username'),
-            passwordInput: document.getElementById('password'),
-            mensagemLogin: document.getElementById('mensagemLogin'),
-            botoesLogout: document.querySelectorAll('.logout-btn'),
-            botaoVisualizar: document.getElementById('botaoVisualizar'),
-            botaoVoltarAdmin: document.getElementById('botaoVoltarAdmin'),
-            listaUsuariosAdmin: document.getElementById('listaUsuariosAdmin'),
-            adminGlobalMessage: document.getElementById('adminGlobalMessage'),
-            formAdicionarUsuario: document.getElementById('formAdicionarUsuario'),
-            newUsernameInput: document.getElementById('newUsername'),
-            newPasswordInput: document.getElementById('newPassword'),
-            adminAddUserMessage: document.getElementById('adminAddUserMessage'),
-            loggedInUserName: document.getElementById('loggedInUserName'), 
-            welcomeNotification: document.getElementById('welcomeNotification'),
-            welcomeNotificationText: document.getElementById('welcomeNotificationText'),
-            closeWelcomeNotificationBtn: document.getElementById('closeWelcomeNotificationBtn'),
-            recentUpdateBtn: document.getElementById('recentUpdateBtn'),
-            updateModal: document.getElementById('updateModal'),
-            closeUpdateModalBtn: document.getElementById('closeUpdateModalBtn'),
-            okUpdateModalBtn: document.getElementById('okUpdateModalBtn'),
-            mensagemCSVInfo: document.getElementById('mensagemCSVInfo'),
-            uploadManualSection: document.getElementById('uploadManualSection'),
-            uploadHeader: document.getElementById('uploadHeader'), 
-            uploadContent: document.getElementById('uploadContent'), 
-            toggleUploadIcon: document.getElementById('toggleUploadIcon'), 
-            filtroColunaSelect: document.getElementById('filtroColunaSelect'),
-            filtroPesquisaInput: document.getElementById('filtroPesquisaInput'),
-            colunasVisiveisHeader: document.getElementById('colunasVisiveisHeader'),
-            colunasVisiveisContainer: document.getElementById('colunasVisiveisContainer'), 
-            toggleColunasIcon: document.getElementById('toggleColunasIcon'),
-            tabelaCabecalho: document.getElementById('tabelaCabecalho'),
-            tabelaCorpo: document.getElementById('tabelaCorpo'),
-            totalBase: document.getElementById('totalBase'),
-            pessoasExibidas: document.getElementById('pessoasExibidas'),
-            paginacaoContainer: document.getElementById('paginacaoContainer'),
-            mensagemSemDados: document.getElementById('mensagemSemDados'),
-            arquivoCSVInput: document.getElementById('arquivoCSV'),
-            botaoCarregarCSV: document.getElementById('botaoCarregarCSV'),
-            botaoExportarCSV: document.getElementById('botaoExportarCSV'),
-            mensagemUploadCSV: document.getElementById('mensagemUploadCSV'),
-            currentYear: document.getElementById('currentYear')
+        // CONFIGURAÇÕES
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // ESTADO GLOBAL
+        let dataState = {
+            raw: [],
+            filtered: [],
+            headers: [],
+            visibleColumns: [],
+            currentPage: 1,
+            rowsPerPage: 25,
+            users: []
         };
-        if (DOMElements.currentYear) DOMElements.currentYear.textContent = new Date().getFullYear();
 
-        // --- Funções Utilitárias ---
-        function exibirMensagemFeedback(elemento, mensagem, tipo = 'info', desaparecerApos = 0) {
-            if (!elemento) return;
-            elemento.classList.remove('feedback-success', 'feedback-error', 'feedback-warning', 'text-gray-600', 'dark:text-gray-400', 'hidden');
-            
-            if (!mensagem || mensagem.trim() === "") {
-                elemento.textContent = '';
-                elemento.classList.add('hidden'); 
+        let currentProfile = null;
+
+        // --- BACKEND ---
+        const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+
+        async function init() {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
             } else {
-                elemento.textContent = mensagem;
-                elemento.classList.remove('hidden'); 
-                if (tipo === 'success') elemento.classList.add('feedback-success');
-                else if (tipo === 'error') elemento.classList.add('feedback-error');
-                else if (tipo === 'warning') elemento.classList.add('feedback-warning');
-                else elemento.classList.add('text-gray-600', 'dark:text-gray-400'); 
-            }
-
-            if (desaparecerApos > 0 && mensagem && mensagem.trim() !== "") {
-                setTimeout(() => {
-                    elemento.textContent = '';
-                    elemento.classList.add('hidden');
-                }, desaparecerApos);
+                await signInAnonymously(auth);
             }
         }
 
-        // Alias para compatibilidade
-        const setFeedback = exibirMensagemFeedback;
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', user.uid));
+                
+                // Admin Hardcoded ou via Firestore Role
+                if (user.email === 'admin@sistema.com' || (userDoc.exists() && userDoc.data().role === 'admin')) {
+                    currentProfile = { uid: user.uid, role: 'admin', username: 'Administrador' };
+                    showAdmin();
+                } else {
+                    currentProfile = userDoc.exists() ? { uid: user.uid, ...userDoc.data() } : { uid: user.uid, role: 'user', username: user.displayName || 'Usuário' };
+                    showUser();
+                }
+            } else {
+                document.getElementById('telaLogin').classList.remove('hidden');
+                document.getElementById('telaAdmin').classList.add('hidden');
+                document.getElementById('conteudoPrincipal').classList.add('hidden');
+            }
+        });
 
-        function parseCSVContent(textoCSV) {
-            const linhas = textoCSV.split(/\r\n|\n/).filter(linha => linha.trim() !== ''); 
-            if (linhas.length < 1) { throw new Error("CSV vazio ou inválido.");}
-            const headers = linhas[0].split(',').map(h => h.trim().replace(/^"|"$/g, '')); 
-            const data = linhas.slice(1).map(linha => {
-                const colunas = linha.split(',');
+        // --- AUTH & USER MGMT ---
+        window.loginComGoogle = async () => {
+            try {
+                const result = await signInWithPopup(auth, new GoogleAuthProvider());
+                const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', result.user.uid);
+                const userDoc = await getDoc(userRef);
+                if (!userDoc.exists()) {
+                    await setDoc(userRef, { username: result.user.displayName, email: result.user.email, role: 'user' });
+                }
+            } catch (e) { alert("Erro Google Login: " + e.message); }
+        };
+
+        window.loginTradicional = async (e) => {
+            e.preventDefault();
+            const u = document.getElementById('username').value.toLowerCase().trim();
+            const p = document.getElementById('password').value;
+
+            if (u === 'admin' && p === '090820') {
+                const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', auth.currentUser.uid);
+                await setDoc(userRef, { username: 'Admin', role: 'admin' }, { merge: true });
+                showAdmin();
+            } else {
+                const match = dataState.users.find(x => x.username.toLowerCase() === u && x.password === p);
+                if (match) {
+                    currentProfile = match;
+                    showUser();
+                } else { alert("Usuário ou senha incorretos."); }
+            }
+        };
+
+        function listenToUsers() {
+            onSnapshot(usersRef, (snap) => {
+                dataState.users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                if (currentProfile?.role === 'admin') renderAdminList();
+            }, (err) => console.error(err));
+        }
+
+        function renderAdminList() {
+            const container = document.getElementById('listaUsuariosAdmin');
+            container.innerHTML = '';
+            dataState.users.filter(u => u.role !== 'admin').forEach(u => {
+                const div = document.createElement('div');
+                div.className = 'bg-white dark:bg-gray-800 p-4 rounded shadow-md border dark:border-gray-700';
+                div.innerHTML = `
+                    <div class="space-y-3">
+                        <input type="text" value="${u.username}" id="u-${u.id}" class="text-sm">
+                        <input type="text" value="${u.password || ''}" id="p-${u.id}" class="text-sm" placeholder="Senha">
+                        <div class="flex gap-2">
+                            <button onclick="updateUser('${u.id}')" class="bg-blue-500 text-white px-3 py-1 rounded text-xs">Salvar</button>
+                            <button onclick="deleteUser('${u.id}')" class="bg-red-500 text-white px-3 py-1 rounded text-xs">Apagar</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        window.updateUser = async (id) => {
+            const username = document.getElementById(`u-${id}`).value;
+            const password = document.getElementById(`p-${id}`).value;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', id), { username, password });
+            alert("Usuário atualizado.");
+        };
+
+        window.deleteUser = async (id) => {
+            if (confirm("Deseja apagar este usuário?")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', id));
+        };
+
+        window.adicionarUsuario = async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value.trim();
+            await setDoc(doc(usersRef), { username, password, role: 'user' });
+            document.getElementById('formAdicionarUsuario').reset();
+        };
+
+        // --- FRONTEND ENGINE ---
+        function showAdmin() {
+            document.getElementById('telaLogin').classList.add('hidden');
+            document.getElementById('telaAdmin').classList.remove('hidden');
+            listenToUsers();
+        }
+
+        function showUser() {
+            document.getElementById('telaLogin').classList.add('hidden');
+            document.getElementById('telaAdmin').classList.add('hidden');
+            document.getElementById('conteudoPrincipal').classList.remove('hidden');
+            document.getElementById('loggedInUserName').textContent = currentProfile.username;
+            if (currentProfile.role === 'admin') document.getElementById('botaoVoltarAdmin').classList.remove('hidden');
+        }
+
+        function parseCSV(text) {
+            const rows = text.split(/\r\n|\n/).filter(r => r.trim());
+            const headers = rows[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            const data = rows.slice(1).map(row => {
+                const cols = row.split(',');
                 const item = {};
-                headers.forEach((h, i) => item[h] = colunas[i] ? colunas[i].trim().replace(/^"|"$/g, '') : '');
+                headers.forEach((h, i) => item[h] = cols[i]?.trim().replace(/^"|"$/g, '') || '');
                 return item;
             });
             return { headers, data };
         }
 
-        // --- Funções de Login e Sessão ---
-        function tentarLogin(event) {
-            event.preventDefault(); 
-            const username = DOMElements.usernameInput.value.toLowerCase().trim();
-            const password = DOMElements.passwordInput.value;
-            const usuarioEncontrado = mockUsuarios.find(u => u.username.toLowerCase() === username && u.password === password);
+        window.processarCSV = () => {
+            const file = document.getElementById('arquivoCSV').files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const { headers, data } = parseCSV(e.target.result);
+                dataState.headers = headers;
+                dataState.raw = data;
+                dataState.visibleColumns = [...headers];
+                dataState.currentPage = 1;
+                renderColumnSelectors();
+                renderFilterSelect();
+                applyFilter();
+                document.getElementById('totalBase').textContent = data.length;
+            };
+            reader.readAsText(file);
+        };
 
-            if (usuarioEncontrado) {
-                currentUser = { ...usuarioEncontrado }; 
-                DOMElements.telaLogin.classList.add('hidden');
-                DOMElements.recentUpdateBtn.classList.add('hidden');
-                if (currentUser.role === 'admin') {
-                    DOMElements.telaAdmin.classList.remove('hidden');
-                    renderAdminPanel(); 
-                } else { 
-                    DOMElements.conteudoPrincipal.classList.remove('hidden');
-                    setupUserView();
-                }
-            } else {
-                exibirMensagemFeedback(DOMElements.mensagemLogin, 'Usuário ou senha inválidos.', 'error');
-            }
-        }
-
-        function fazerLogout() {
-            currentUser = null;
-            DOMElements.telaLogin.classList.remove('hidden');
-            DOMElements.conteudoPrincipal.classList.add('hidden');
-            DOMElements.telaAdmin.classList.add('hidden');
-            DOMElements.recentUpdateBtn.classList.remove('hidden');
-            DOMElements.botaoVoltarAdmin.classList.add('hidden');
-            DOMElements.usernameInput.value = ''; DOMElements.passwordInput.value = '';
-            resetVisualizadorState();
-            exibirMensagemFeedback(DOMElements.adminGlobalMessage, ''); 
-            exibirMensagemFeedback(DOMElements.adminAddUserMessage, ''); 
-            DOMElements.welcomeNotification.classList.add('hidden');
-        }
-        
-        function resetVisualizadorState() {
-            dadosPessoas = []; dadosFiltradosAtuais = []; csvHeaders = []; colunasSelecionadas = []; currentPage = 1;
-            DOMElements.colunasVisiveisContainer.innerHTML = ''; 
-            DOMElements.loggedInUserName.textContent = '';
-            atualizarContagemTotalBase();
-            popularFiltroColuna(); 
-            renderizarTabela([]); renderizarPaginacao(0);
-            DOMElements.uploadManualSection.classList.remove('hidden'); 
-        }
-
-        function setupUserView() {
-            resetVisualizadorState(); 
-            if (currentUser) {
-                DOMElements.loggedInUserName.textContent = currentUser.username;
-                
-                if (currentUser.role === 'admin') {
-                    DOMElements.botaoVoltarAdmin.classList.remove('hidden');
-                }
-
-                DOMElements.welcomeNotificationText.textContent = `Bem-vindo(a), ${currentUser.username}!`;
-                DOMElements.welcomeNotification.classList.remove('hidden', 'opacity-0', '-translate-x-full');
-                DOMElements.welcomeNotification.classList.add('show');
-                clearTimeout(welcomeTimeout); 
-                welcomeTimeout = setTimeout(() => {
-                    DOMElements.welcomeNotification.classList.remove('show');
-                    setTimeout(() => DOMElements.welcomeNotification.classList.add('hidden'), 500);
-                }, 5000);
-            }
-
-            if (currentUser && currentUser.assignedCSV && currentUser.assignedCSV.data) {
-                csvHeaders = currentUser.assignedCSV.headers;
-                dadosPessoas = currentUser.assignedCSV.data;
-                colunasSelecionadas = [...csvHeaders]; 
-                popularSeletorDeColunas(); atualizarContagemTotalBase(); popularFiltroColuna(); 
-                DOMElements.uploadManualSection.classList.add('hidden'); 
-            }
-            aplicarFiltro(); 
-        }
-
-        // --- Funções Administrativas ---
-        function renderAdminPanel() {
-            DOMElements.listaUsuariosAdmin.innerHTML = ''; 
-            mockUsuarios.filter(u => u.role === 'user').forEach(user => {
-                const card = criarUserCardAdmin(user);
-                DOMElements.listaUsuariosAdmin.appendChild(card);
-            });
-        }
-
-        function criarUserCardAdmin(user) {
-            const card = document.createElement('div');
-            card.className = 'bg-gray-200 dark:bg-gray-700 p-4 rounded-lg shadow-md';
-            card.innerHTML = `
-                <div class="mb-3">
-                    <label class="block text-sm font-medium">Usuário:</label>
-                    <input type="text" id="edit-u-${user.username}" class="p-2 border rounded-md w-full text-sm" value="${user.username}">
-                </div>
-                <div class="mb-3">
-                    <label class="block text-sm font-medium">Senha:</label>
-                    <input type="text" id="edit-p-${user.username}" class="p-2 border rounded-md w-full text-sm" value="${user.password}">
-                </div>
-                <div class="flex space-x-2">
-                    <button class="bg-green-500 text-white py-1 px-3 rounded-md text-sm" onclick="saveUserChanges('${user.username}')">Salvar</button>
-                    <button class="bg-red-500 text-white py-1 px-3 rounded-md text-sm" onclick="handleRemoverUsuario('${user.username}')">Remover</button>
-                </div>
-            `;
-            return card;
-        }
-
-        function saveUserChanges(original) {
-            const u = document.getElementById(`edit-u-${original}`).value.trim();
-            const p = document.getElementById(`edit-p-${original}`).value.trim();
-            const user = mockUsuarios.find(x => x.username === original);
-            if(user) { user.username = u; user.password = p; renderAdminPanel(); exibirMensagemFeedback(DOMElements.adminGlobalMessage, 'Alterado!', 'success', 2000); }
-        }
-
-        function handleRemoverUsuario(u) {
-            const idx = mockUsuarios.findIndex(x => x.username === u);
-            if(idx !== -1) { mockUsuarios.splice(idx, 1); renderAdminPanel(); }
-        }
-
-        function handleAdicionarUsuario(e) {
-            e.preventDefault();
-            const u = DOMElements.newUsernameInput.value.trim();
-            const p = DOMElements.newPasswordInput.value.trim();
-            if(!u || !p) return;
-            mockUsuarios.push({username: u, password: p, role: 'user', assignedCSV: null});
-            DOMElements.formAdicionarUsuario.reset(); renderAdminPanel();
-            exibirMensagemFeedback(DOMElements.adminAddUserMessage, 'Adicionado!', 'success', 2000);
-        }
-
-        // --- Funções de Visualização e Tabela ---
-        function popularSeletorDeColunas() {
-            DOMElements.colunasVisiveisContainer.innerHTML = ''; 
-            csvHeaders.forEach(h => {
-                const div = document.createElement('div');
-                div.className = 'flex items-center';
-                const cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = h; cb.checked = colunasSelecionadas.includes(h); cb.className = 'mr-2';
-                cb.onchange = (e) => {
-                    if (e.target.checked) colunasSelecionadas.push(h);
-                    else colunasSelecionadas = colunasSelecionadas.filter(c => c !== h);
-                    aplicarFiltro(); 
+        function renderColumnSelectors() {
+            const container = document.getElementById('colunasVisiveisContainer');
+            container.innerHTML = '';
+            dataState.headers.forEach(h => {
+                const label = document.createElement('label');
+                label.innerHTML = `<input type="checkbox" value="${h}" ${dataState.visibleColumns.includes(h) ? 'checked' : ''}> ${h}`;
+                label.querySelector('input').onchange = (e) => {
+                    if (e.target.checked) dataState.visibleColumns.push(h);
+                    else dataState.visibleColumns = dataState.visibleColumns.filter(x => x !== h);
+                    applyFilter();
                 };
-                const lb = document.createElement('label'); lb.textContent = h;
-                div.append(cb, lb);
-                DOMElements.colunasVisiveisContainer.appendChild(div);
+                container.appendChild(label);
             });
         }
 
-        function popularFiltroColuna() {
-            DOMElements.filtroColunaSelect.innerHTML = '<option value="">Selecione uma coluna</option>'; 
-            csvHeaders.forEach(h => {
+        function renderFilterSelect() {
+            const sel = document.getElementById('filtroColunaSelect');
+            sel.innerHTML = '<option value="">Selecione...</option>';
+            dataState.headers.forEach(h => {
                 const opt = document.createElement('option'); opt.value = h; opt.textContent = h;
-                DOMElements.filtroColunaSelect.appendChild(opt);
+                sel.appendChild(opt);
             });
-            DOMElements.filtroPesquisaInput.disabled = !DOMElements.filtroColunaSelect.value;
+            document.getElementById('filtroPesquisaInput').disabled = false;
         }
 
-        function renderizarTabela(dados) {
-            DOMElements.tabelaCabecalho.innerHTML = ''; DOMElements.tabelaCorpo.innerHTML = '';
-            if (colunasSelecionadas.length === 0) {
-                 exibirMensagemFeedback(DOMElements.mensagemSemDados, 'Selecione colunas.'); 
-                 DOMElements.tabelaCabecalho.classList.add('hidden'); DOMElements.tabelaCorpo.classList.add('hidden');
-                 atualizarContagemPessoasExibidas(0); return;
-            }
-            exibirMensagemFeedback(DOMElements.mensagemSemDados, ''); 
-            DOMElements.tabelaCabecalho.classList.remove('hidden'); DOMElements.tabelaCorpo.classList.remove('hidden');
+        function applyFilter() {
+            const col = document.getElementById('filtroColunaSelect').value;
+            const term = document.getElementById('filtroPesquisaInput').value.toLowerCase().trim();
+            
+            dataState.filtered = col && term 
+                ? dataState.raw.filter(x => String(x[col]).toLowerCase().includes(term))
+                : dataState.raw;
+
+            document.getElementById('pessoasExibidas').textContent = dataState.filtered.length;
+            renderTable();
+        }
+
+        function renderTable() {
+            const head = document.getElementById('tabelaCabecalho');
+            const body = document.getElementById('tabelaCorpo');
+            head.innerHTML = ''; body.innerHTML = '';
+
+            if (dataState.visibleColumns.length === 0) return;
 
             const trH = document.createElement('tr');
-            colunasSelecionadas.forEach(h => {
+            dataState.visibleColumns.forEach(c => {
                 const th = document.createElement('th');
-                th.className = "px-4 py-2 text-left text-xs font-bold uppercase bg-gray-50 dark:bg-gray-700";
-                th.textContent = h; trH.appendChild(th);
+                th.className = "px-4 py-3 text-xs font-bold uppercase tracking-wider";
+                th.textContent = c; trH.appendChild(th);
             });
-            DOMElements.tabelaCabecalho.appendChild(trH);
-            
-            const start = (currentPage - 1) * rowsPerPage;
-            const paginated = dados.slice(start, start + rowsPerPage);
+            head.appendChild(trH);
 
-            if (dados.length === 0) { 
-                DOMElements.tabelaCorpo.innerHTML = '<tr><td colspan="100%" class="p-4 text-center">Vazio.</td></tr>';
-            } else {
-                paginated.forEach(p => {
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-gray-100 dark:hover:bg-gray-800 transition border-b dark:border-gray-700";
-                    colunasSelecionadas.forEach(c => {
-                        const td = document.createElement('td'); td.className = "px-4 py-2 text-sm";
-                        td.textContent = p[c] || ''; tr.appendChild(td);
-                    });
-                    DOMElements.tabelaCorpo.appendChild(tr);
+            const start = (dataState.currentPage - 1) * dataState.rowsPerPage;
+            const pageData = dataState.filtered.slice(start, start + dataState.rowsPerPage);
+
+            pageData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 dark:hover:bg-gray-700 transition";
+                dataState.visibleColumns.forEach(c => {
+                    const td = document.createElement('td'); td.className = "px-4 py-3 text-sm";
+                    td.textContent = row[c] || ''; tr.appendChild(td);
                 });
-            }
-            atualizarContagemPessoasExibidas(dados.length);
-            renderizarPaginacao(dados.length);
-        }
-
-        function renderizarPaginacao(total) {
-            DOMElements.paginacaoContainer.innerHTML = '';
-            const totalPages = Math.ceil(total / rowsPerPage);
-            if (totalPages <= 1) return;
-
-            const pages = new Set([1, totalPages, currentPage, currentPage - 1, currentPage + 1]);
-            const sortedPages = Array.from(pages).filter(p => p >= 1 && p <= totalPages).sort((a, b) => a - b);
-
-            let last = 0;
-            sortedPages.forEach(p => {
-                if (last && p - last > 1) {
-                    const span = document.createElement('span'); span.textContent = '...'; DOMElements.paginacaoContainer.appendChild(span);
-                }
-                const btn = document.createElement('button');
-                btn.textContent = p; btn.className = `pagination-btn ${p === currentPage ? 'active' : ''}`;
-                btn.onclick = () => { currentPage = p; aplicarFiltro(); };
-                DOMElements.paginacaoContainer.appendChild(btn);
-                last = p;
+                body.appendChild(tr);
             });
-            
-            const input = document.createElement('input');
-            input.type = 'number'; input.placeholder = 'Pág...'; input.className = 'w-16 p-1 border rounded text-center dark:bg-gray-800';
-            input.onkeydown = (e) => {
-                if (e.key === 'Enter') {
-                    const v = parseInt(e.target.value);
-                    if (v >= 1 && v <= totalPages) { currentPage = v; aplicarFiltro(); }
-                }
-            };
-            DOMElements.paginacaoContainer.appendChild(input);
+            renderPagination();
         }
 
-        function atualizarContagemTotalBase() {
-            if (DOMElements.totalBase) {
-                DOMElements.totalBase.textContent = dadosPessoas.length;
-            }
+        function renderPagination() {
+            const container = document.getElementById('paginacaoContainer');
+            container.innerHTML = '';
+            const total = Math.ceil(dataState.filtered.length / dataState.rowsPerPage);
+            if (total <= 1) return;
+
+            const pages = new Set([1, total, dataState.currentPage, dataState.currentPage - 1, dataState.currentPage + 1]);
+            Array.from(pages).filter(p => p >= 1 && p <= total).sort((a,b)=>a-b).forEach(p => {
+                const btn = document.createElement('button');
+                btn.textContent = p; btn.className = `pagination-btn ${p === dataState.currentPage ? 'active' : ''}`;
+                btn.onclick = () => { dataState.currentPage = p; renderTable(); };
+                container.appendChild(btn);
+            });
         }
 
-        function atualizarContagemPessoasExibidas(count) {
-            if (DOMElements.pessoasExibidas) {
-                DOMElements.pessoasExibidas.textContent = count;
-            }
-        }
-
-        function aplicarFiltro() {
-            const col = DOMElements.filtroColunaSelect.value;
-            const search = DOMElements.filtroPesquisaInput.value.toLowerCase().trim();
-            let res = dadosPessoas;
-            if (col && search) {
-                res = dadosPessoas.filter(p => String(p[col] || '').toLowerCase().includes(search));
-            }
-            dadosFiltradosAtuais = res; 
-            renderizarTabela(res);
-        }
-
-        function exportarDadosParaCSV() {
-            if (dadosFiltradosAtuais.length === 0 || colunasSelecionadas.length === 0) return;
-            let csv = colunasSelecionadas.join(',') + '\n';
-            dadosFiltradosAtuais.forEach(p => {
-                csv += colunasSelecionadas.map(c => {
-                    let v = String(p[c] || '');
+        window.exportarCSV = () => {
+            if (dataState.filtered.length === 0) return;
+            let csv = dataState.visibleColumns.join(',') + '\n';
+            dataState.filtered.forEach(row => {
+                csv += dataState.visibleColumns.map(c => {
+                    let v = String(row[c]);
                     return v.includes(',') ? `"${v}"` : v;
                 }).join(',') + '\n';
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = 'export.csv'; a.click();
-        }
+            const a = document.createElement('a'); a.href = url; a.download = `export_${Date.now()}.csv`; a.click();
+        };
 
-        function processarCSVManualmente(event) { 
-            const f = event.target.files[0]; if (!f) return;
-            const r = new FileReader();
-            r.onload = (e) => {
-                try {
-                    const parsed = parseCSVContent(e.target.result);
-                    csvHeaders = parsed.headers; dadosPessoas = parsed.data;
-                    colunasSelecionadas = [...csvHeaders]; popularSeletorDeColunas();
-                    atualizarContagemTotalBase();
-                    popularFiltroColuna(); aplicarFiltro();
-                    exibirMensagemFeedback(DOMElements.mensagemUploadCSV, 'CSV OK!', 'success', 2000);
-                } catch (err) { exibirMensagemFeedback(DOMElements.mensagemUploadCSV, 'Erro CSV.', 'error'); }
-            };
-            r.readAsText(f); 
-        }
-
-        // --- Inicialização ---
-        document.addEventListener('DOMContentLoaded', () => {
-            DOMElements.formLogin.onsubmit = tentarLogin;
-            DOMElements.botoesLogout.forEach(btn => btn.onclick = fazerLogout);
-            DOMElements.recentUpdateBtn.onclick = () => DOMElements.updateModal.classList.remove('hidden');
-            DOMElements.closeUpdateModalBtn.onclick = DOMElements.okUpdateModalBtn.onclick = () => DOMElements.updateModal.classList.add('hidden');
-            DOMElements.closeWelcomeNotificationBtn.onclick = () => {
-                DOMElements.welcomeNotification.classList.remove('show');
-                setTimeout(() => DOMElements.welcomeNotification.classList.add('hidden'), 500);
-            };
-            DOMElements.uploadHeader.onclick = () => {
-                DOMElements.uploadContent.classList.toggle('hidden');
-                DOMElements.toggleUploadIcon.classList.toggle('rotate-180');
-            };
-            DOMElements.colunasVisiveisHeader.onclick = () => {
-                DOMElements.colunasVisiveisContainer.classList.toggle('hidden');
-                DOMElements.toggleColunasIcon.classList.toggle('rotate-180');
-            };
-            DOMElements.botaoCarregarCSV.onclick = () => processarCSVManualmente({ target: DOMElements.arquivoCSVInput });
-            DOMElements.filtroColunaSelect.onchange = () => {
-                DOMElements.filtroPesquisaInput.disabled = !DOMElements.filtroColunaSelect.value;
-                aplicarFiltro();
-            };
-            DOMElements.filtroPesquisaInput.oninput = aplicarFiltro;
-            DOMElements.botaoExportarCSV.onclick = exportarDadosParaCSV;
-            DOMElements.formAdicionarUsuario.onsubmit = handleAdicionarUsuario;
-
-            DOMElements.botaoVisualizar.onclick = () => {
-                DOMElements.telaAdmin.classList.add('hidden');
-                DOMElements.conteudoPrincipal.classList.remove('hidden');
-                setupUserView();
-            };
-            DOMElements.botaoVoltarAdmin.onclick = () => {
-                DOMElements.conteudoPrincipal.classList.add('hidden');
-                DOMElements.telaAdmin.classList.remove('hidden');
-                renderAdminPanel();
-            };
-
-            resetVisualizadorState();
+        // INICIALIZAÇÃO EVENTOS
+        window.addEventListener('load', () => {
+            init();
+            document.getElementById('formLogin').onsubmit = window.loginTradicional;
+            document.getElementById('btnGoogleLogin').onclick = window.loginComGoogle;
+            document.getElementById('formAdicionarUsuario').onsubmit = window.adicionarUsuario;
+            document.getElementById('botaoCarregarCSV').onclick = window.processarCSV;
+            document.getElementById('filtroPesquisaInput').oninput = applyFilter;
+            document.getElementById('filtroColunaSelect').onchange = applyFilter;
+            document.getElementById('botaoExportarCSV').onclick = window.exportarCSV;
+            document.querySelectorAll('.logout-btn').forEach(b => b.onclick = () => signOut(auth));
+            document.getElementById('botaoVisualizar').onclick = showUser;
+            document.getElementById('botaoVoltarAdmin').onclick = showAdmin;
         });
     </script>
 </body>
